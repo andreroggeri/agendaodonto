@@ -1,0 +1,29 @@
+version: '3.4'
+
+services:
+
+  chatbot:
+    build: .
+    environment:
+     - TEST_MODE=true
+     - WHATSAPP_SESSION=${WHATSAPP_SESSION}
+     - BROWSERLESS_URL=browserless:3000
+     - REDIS_URL=redis:6379
+    restart: always
+  
+  redis:
+    image: redis
+    ports: 
+      - 6379:6379
+
+  browserless:
+    image: browserless/chrome
+    environment:
+      - MAX_CONCURRENT_SESSIONS=1
+      - PREBOOT_CHROME=true
+      - KEEP_ALIVE=true
+      - CONNECTION_TIMEOUT=-1
+      - CHROME_REFRESH_TIME=86400000
+
+    ports:
+      - 3000:3000
