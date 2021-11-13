@@ -14,6 +14,7 @@ RUN npm run build
 
 WORKDIR /app/dist
 
-ADD scripts/* .
+ADD scripts/entrypoint.sh .
+ADD scripts/wait-for-it.sh .
 
 ENTRYPOINT [ "./entrypoint.sh" ]
