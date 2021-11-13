@@ -89,7 +89,7 @@ whatsapp.on('ready', () => {
     setInterval(async () => {
         const state = await whatsapp.getState()
         console.log('State: ', state)
-        console.log('Chats: ', await whatsapp.getChats())
+        await whatsapp.getChats();
     }, 5000);
 })
 
