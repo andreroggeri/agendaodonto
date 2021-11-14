@@ -66,6 +66,7 @@ const options: ClientOptions = {
     session: settings.SESSION_DATA,
     restartOnAuthFail: true,
     takeoverOnConflict: true,
+    authTimeoutMs: 120 * 1000
 }
 const whatsapp = new Client(options);
 
