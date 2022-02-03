@@ -26,7 +26,7 @@
   "dependencies": {
     "date-fns": "^2.25.0",
     "ioredis": "^4.28.0",
-    "whatsapp-web.js": "^1.15.2"
+    "whatsapp-web.js": "^1.15.4"
   },
   "devDependencies": {
     "@types/ioredis": "^4.27.8",
