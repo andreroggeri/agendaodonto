@@ -1,3 +1,4 @@
+import { writeFileSync } from 'fs';
 import { Client, ClientOptions, Message } from 'whatsapp-web.js';
 import * as flows from './buttons';
 import { ClientContext } from './context';
@@ -54,7 +55,6 @@ async function handleMessage(client: Client, message: Message) {
     }
 }
 
-console.log('Settings => ', settings)
 const puppeteerOptions = {
     headless: false,
 };
@@ -72,6 +72,7 @@ const whatsapp = new Client(options);
 
 whatsapp.on('authenticated', async (credentials) => {
     console.log('Authenticated')
+    writeFileSync('./session.json', JSON.stringify(credentials))
 });
 
 whatsapp.on('auth_failure', (err) => {
@@ -91,7 +92,7 @@ whatsapp.on('ready', () => {
         const state = await whatsapp.getState()
         console.log('State: ', state)
         await whatsapp.getChats();
-    }, 5000);
+    }, 15000);
 })
 
 whatsapp.on('change_state', (state) => {
@@ -102,7 +103,9 @@ whatsapp.on('qr', () => {
 })
 
 whatsapp.on('message', message => {
+    console.log('New message received!!')
     if (settings.TEST_MODE && message.body !== '!ping') {
+        console.info('TEST_MODE enabled, Ignoring message !')
         return;
     }
 
@@ -117,9 +120,9 @@ whatsapp.on('message', message => {
 });
 
 
-
-
 (async () => {
+    console.log('Settings => ', settings)
     await whatsapp.initialize();
     console.log(await whatsapp.getWWebVersion())
+    console.log('Chatbot is running :)');
 })()
