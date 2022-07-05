@@ -28,5 +28,11 @@ module.exports = function (config) {
     browsers: ['Chrome'],
     singleRun: false,
     reportSlowerThan: 150,
+    customLaunchers: {
+      ChromeHeadlessCI: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox', '--disable-gpu']
+      }
+    },
   });
 };

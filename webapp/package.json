@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build:staging": "ng b -c=staging --aot",
     "build:prod": "ng build",
-    "test": "ng test --code-coverage=true --watch=false --browsers=ChromeHeadless",
+    "test": "ng test",
+    "test:ci": "ng test --code-coverage=true --watch=false --browsers=ChromeHeadlessCI",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
