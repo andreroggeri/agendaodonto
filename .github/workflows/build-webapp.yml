@@ -1,0 +1,41 @@
+name: Quality check
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+      - webapp/**
+  pull_request:
+    types: [opened, reopened]
+    paths:
+      - webapp/**
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./webapp
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: 16
+        cache: 'npm'
+        cache-dependency-path: webapp/package-lock.json
+
+    - name: Install dependencies
+      run: npm i --ci
+
+    - name: Lint
+      run: g lint
+    
+    - name: Run tests
+      run: ng test --code-coverage=true --watch=false --browsers=ChromeHeadless
+
+    - name: Build
+      run: ng b -c=staging --aot
