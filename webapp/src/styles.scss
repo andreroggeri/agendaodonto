@@ -1,0 +1,15 @@
+/* You can add global styles to this file, and also import other style files */
+@import 'variables';
+@import 'assets/application.scss';
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import '~angular-calendar/css/angular-calendar.css';
+@import '~@angular/material/theming';
+
+// Include non-theme styles for core.
+@include mat-core();
+
+$theme: mat-light-theme($primary, $accent, $warn);
+
+// Include all theme styles for the components.
+@include angular-material-theme($theme);

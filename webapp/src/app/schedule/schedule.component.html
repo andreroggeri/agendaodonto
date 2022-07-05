@@ -1,0 +1,78 @@
+<mat-card class="container">
+    <mat-card-title>Agenda</mat-card-title>
+    <div class="app-actions" fxLayout="column" fxLayout.gt-lg="row" fxLayoutAlign="center center">
+        <div fxFlex="20" fxLayoutAlign="center center">
+            <button mat-button (click)="setView('day')">Dia</button>
+            <button mat-button (click)="setView('week')">Semana</button>
+            <a mat-button [routerLink]="['/agenda/lista']">Lista</a>
+            <a mat-button color="accent" [routerLink]="['/agenda/criar']" fxHide.gt-lg="true">Novo</a>
+        </div>
+        <div fxFlex="47" fxLayoutAlign="center center">
+            <h3>{{ currentDate | calendarDate:(view + 'ViewTitle')}}</h3>
+        </div>
+        <div fxFlex="33" fxLayoutAlign="center center">
+            <button mat-button (click)="decrement()">Anterior</button>
+            <button mat-button (click)="today()">Hoje</button>
+            <button mat-button (click)="increment()">Próximo</button>
+            <a mat-raised-button color="accent" [routerLink]="['/agenda/criar']" fxHide fxShow.gt-lg="true">Novo</a>
+        </div>
+    </div>
+    <mat-progress-bar [mode]="'query'" *ngIf="isLoading"></mat-progress-bar>
+    <div fxLayout="column" >
+        <mwl-calendar-day-view
+            *ngIf="view=='day'"
+            [viewDate]="currentDate"
+            [events]="schedules"
+            [dayStartHour]="7"
+            [dayEndHour]="21"
+            (eventClicked)="eventClick($event)"
+            [eventTemplate]="customDayEventTemplate">
+        </mwl-calendar-day-view>
+        <mwl-calendar-week-view
+        class="no-border"
+            *ngIf="view=='week'"
+            [dayStartHour]="8"
+            [dayEndHour]="21"
+            [viewDate]="currentDate"
+            [events]="schedules"
+            (eventClicked)="eventClick($event)"
+            [eventTemplate]="customWeekEventTemplate">
+        </mwl-calendar-week-view>
+    </div>
+</mat-card>
+
+<ng-template
+    #customWeekEventTemplate
+    let-weekEvent="weekEvent"
+    let-eventClicked="eventClicked">
+    <div
+        class="cal-event"
+        [style.backgroundColor]="weekEvent.event.color.secondary"
+        [style.borderColor]="weekEvent.event.color.primary"
+        fxLayout="row"
+        fxLayoutAlign="space-between center"
+        matTooltip="{{ weekEvent.event.notificationStatus.hint }}"
+        (mwlClick)="eventClicked.emit()">
+        <mwl-calendar-event-title [event]="weekEvent.event" view="week" (mwlClick)="eventClicked.emit()">
+        </mwl-calendar-event-title>
+        <mat-icon>{{ weekEvent.event.notificationStatus.icon }}</mat-icon>
+    </div>
+</ng-template>
+
+<ng-template
+    #customDayEventTemplate
+    let-dayEvent="dayEvent"
+    let-eventClicked="eventClicked">
+    <div
+        class="cal-event"
+        [style.backgroundColor]="dayEvent.event.color.secondary"
+        [style.borderColor]="dayEvent.event.color.primary"
+        fxLayout="row"
+        fxLayoutAlign="space-between start"
+        matTooltip="{{ dayEvent.event.notificationStatus.hint }}"
+        (mwlClick)="eventClicked.emit()">
+        <mwl-calendar-event-title [event]="dayEvent.event" view="day" (mwlClick)="eventClicked.emit()">
+        </mwl-calendar-event-title>
+        <mat-icon>{{ dayEvent.event.notificationStatus.icon }}</mat-icon>
+    </div>
+</ng-template>

@@ -1,0 +1,77 @@
+@import "../variables";
+:host {
+    .toggle-sidenav {
+        border: 1px solid;
+        min-width: 45px;
+        padding: 0;
+        margin-right: 15px;
+    }
+
+    .sidenav-header {
+        background: url("/assets/sidenav-bg.png") no-repeat;
+        background-size: contain;
+        text-align: center;
+        height: 156.5px;
+    }
+
+    .sidenav-header > p {
+        font-weight: 700;
+        color: #ffffff;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidenav-image {
+        width: 96px;
+        height: 96px;
+        border-radius: 100%;
+        margin-top: 20px;
+    }
+
+    mat-sidenav {
+        mat-list-item.active {
+            background: rgba(0, 0, 0, 0.04);
+            border-left: 4px solid mat-color($primary);
+        }
+
+        mat-list-item {
+            transition-property: border-left;
+            transition-duration: 0.2s;
+            transition-timing-function: ease-in-out;
+            border-left: 0px solid mat-color($primary);
+        }
+
+        mat-list-item:active,
+        mat-list-item:focus {
+            outline: none;
+        }
+
+        mat-list {
+            padding-top: 0;
+        }
+
+        mat-expansion-panel-header {
+            padding: 0 16px;
+            margin: 0;
+        }
+
+        mat-panel-description {
+            margin: 0;
+            mat-list-item {
+                padding-left: 16px;
+            }
+        }
+
+        ::ng-deep mat-panel-description.link {
+            margin:0;
+        }
+        .link:hover {
+            background: rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+        }
+
+        ::ng-deep .mat-expansion-panel-body {
+            padding: 0;
+        }
+    }
+}

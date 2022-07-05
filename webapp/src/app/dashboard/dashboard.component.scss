@@ -1,0 +1,33 @@
+mat-card.mini-report {
+  min-height: 150px;
+}
+
+mat-icon.mini-report {
+  height: 48px;
+  width: 48px;
+  font-size: 48px;
+}
+
+mat-card.chart-report {
+  min-height: 250px;
+  .chart-container {
+    min-height: 250px;
+  }
+}
+
+.huge {
+  font-size: 48px;
+  margin: 0;
+  padding-bottom: 8px;
+}
+
+.current-period {
+  margin: 0;
+}
+
+.dental-plan-report {
+  min-height: 320px;
+  .chart-container {
+    min-height: 320px;
+  }
+}

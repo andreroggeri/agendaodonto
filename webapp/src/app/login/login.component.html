@@ -1,0 +1,26 @@
+<div fxLayout="row" fxLayoutAlign="center center" style="height: 80%">
+    <mat-card class="container">
+        <mat-card-title>Login</mat-card-title>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+            <div fxLayout="row">
+                <mat-form-field fxFlex="100">
+                    <input matInput type="email" placeholder="Email" name="email" formControlName="email" required>
+                    <mat-error>{{ loginForm.getControlMessages('email') }}</mat-error>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row">
+                <mat-form-field fxFlex="100">
+                    <input matInput type="password" placeholder="Senha" name="password" formControlName="password" required>
+                    <mat-error>{{ loginForm.getControlMessages('password') }}</mat-error>
+                </mat-form-field>
+            </div>
+            <mat-error *ngFor="let error of errors"> {{ error }}</mat-error>
+        </form>
+        <p fxLayoutAlign="end center">
+            <a mat-button [routerLink]="['/cadastro']">Criar Conta</a>
+            <button mat-raised-button color="accent" (click)="onSubmit()" [appBtnLoader]="isLoading">
+                <span *ngIf="!isLoading">Entrar</span>
+            </button>
+        </p>
+    </mat-card>
+</div>

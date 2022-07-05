@@ -1,0 +1,21 @@
+<mat-card class="container">
+    <mat-card-title>Plano</mat-card-title>
+    <form [formGroup]="dentalPlanForm" (submit)="submit()" appAutoFocus [appLoadingOverlay]="isLoading">
+        <input type="hidden" formControlName="id">
+        <div fxLayout="row">
+            <mat-form-field fxFlex="100">
+                <input matInput placeholder="Nome" formControlName="name" maxlength="30">
+                <mat-error>{{ dentalPlanForm.getControlMessages('name') }}</mat-error>
+            </mat-form-field>
+        </div>
+        <div class="app-actions" fxLayoutGap="10px" fxLayoutAlign="end center">
+            <button type="button" mat-raised-button color="warn" *ngIf="dentalPlanId"
+                (click)="delete()" [appBtnLoader]="isSubmitting">
+                <span *ngIf="!isSubmitting">Apagar</span>
+            </button>
+            <button mat-raised-button color="accent" [disabled]="!dentalPlanForm.valid" [appBtnLoader]="isSubmitting">
+                <span *ngIf="!isSubmitting">Salvar</span>
+            </button>
+        </div>
+    </form>
+</mat-card>

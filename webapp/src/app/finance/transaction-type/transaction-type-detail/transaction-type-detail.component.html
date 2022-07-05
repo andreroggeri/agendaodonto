@@ -1,0 +1,27 @@
+<mat-card class="container">
+    <mat-card-title>Tipo de Transação</mat-card-title>
+    <form [formGroup]="transactionTypeForm" (submit)="onSubmit()" [appLoadingOverlay]="loading$ | async">
+        <input type="hidden" formControlName="id">
+
+        <div fxLayout="row">
+            <mat-form-field fxFlex="100">
+                <input matInput placeholder="Descrição" formControlName="label" id="transaction-type-label">
+                <mat-error> {{ transactionTypeForm.getControlMessages('label') }} </mat-error>
+            </mat-form-field>
+        </div>
+        <div fxLayout="row">
+            <mat-form-field fxFlex="100">
+                <input matInput placeholder="Código" formControlName="code" id="transaction-type-code">
+                <mat-error> {{ transactionTypeForm.getControlMessages('code') }} </mat-error>
+            </mat-form-field>
+        </div>
+        <div class="app-actions" fxLayoutGap="10px" fxLayoutAlign="end center">
+            <button type="button" mat-raised-button color="warn" *ngIf="transactionTypeForm.controls.id.value != ''" (click)="onDelete()" [appBtnLoader]="submitting$ | async">
+               <span *ngIf="!(submitting$ | async)">Apagar</span>
+            </button>
+            <button mat-raised-button color="accent" [disabled]="!transactionTypeForm.valid" [appBtnLoader]="submitting$ | async">
+                <span *ngIf="!(submitting$ | async)">Salvar</span>
+            </button>
+        </div>
+    </form>
+</mat-card>

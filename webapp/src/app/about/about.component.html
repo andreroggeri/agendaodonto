@@ -1,0 +1,76 @@
+<mat-card class="container">
+    <!--<mat-card-title>Conteúdo</mat-card-title>
+    <ol>
+        <li><a [routerLink]="['/sobre']" fragment="como-utilizar">Como Utilizar</a></li>
+        <li><a [routerLink]="['/sobre']" fragment="projeto">O Projeto</a></li>
+        <li><a [routerLink]="['/sobre']" fragment="contribuindo">Contribuindo</a></li>
+    </ol>-->
+    <!--<mat-card-title id="como-utilizar">Como Utilizar</mat-card-title>
+    <b>Dashboard</b>
+    <p>Visualização geral dos agendamentos do dentista.</p>
+    <p>Confirme os agendamentos passados (Essa informação será utilizada para gerar as estatisticas de comparecimento)</p>
+    <p>Gráfico de comparecimento</p>
+    <b>Clinicas</b>
+    <p>As clínicas servem para "agrupar" dentistas. Cada clíninca pode ter N dentistas.</p>
+    <p>Os pacientes cadastrados em cada clínica serão compartilhados com todos dentista associados a ela.</p>
+    <b>Pacientes</b>
+    <p>Gestão de pacientes</p>
+    <b>Agenda</b>
+    <p>Agendamentos</p>-->
+    <mat-card-title id="projeto">O Projeto</mat-card-title>
+    <p>
+        Fui motivado a desenvolver essa ferramenta após perceber o quanto minha namorada (que é dentista) reclama das faltas de seus
+        pacientes. Então fui buscar uma ferramenta online que fizesse o serviço de notificar os pacientes de alguma maneira,
+        e notei que não existe nenhum serviço gratuito para essa finalidade.
+    </p>
+    <p>
+        O interessante é que hoje maioria dos planos disponibilizados pelas operadoras dispõem de envio SMS ilimitado para qualquer
+        operadora. Então porque não utilizar esse serviço que já pagamos para notificar os pacientes ? Foi aí que encontrei
+        o serviço <a href="http://smsgateway.me">smsgateway.me</a> que permite transformar qualquer celular Android
+        em um "portal" de envio de SMS.
+    </p>
+    <p>
+        A proposta dessa ferramenta é facilitar a atividade de notificar os pacientes e evitar que eles faltem de comparecimento.
+        É simples, basta seguir os passos abaixo:
+    </p>
+    <ol>
+        <li>Crie sua conta em <a href="https://smsgateway.me/admin/users/login#signup">smsgateway.me</a></li>
+        <li>Instale o aplicativo <a href="https://play.google.com/store/apps/details?id=networked.solutions.sms.gateway.api>">
+        SMSGateway pela Play Store</a> de seu dispositivo.</li>
+        <li>Crie sua conta no <a [routerLink]="['/cadastro']">AgendaOdonto</a></li>
+        <li>Insira suas credenciais do SMSGateway</li>
+    </ol>
+
+    <p>
+        <b>Importante: </b>
+    </p>
+    <ul>
+        <li>Essa ferramenta utiliza o seu celular para enviar as mensagens, certifique-se de que seu plano dispõe de SMS ilimitadas
+            para evitar gastos imprevistos.</li>
+        <li>Para que o envio de mensagens aconteça, é necessário que o seu celular disponha de rede de dados (3G/4G/WiFi)</li>
+        <li>Como as mensagens serão enviadas pelo seu número pessoal, seus pacientes terão acesso a ele. </li>
+        <li>Nosso funcionamento depende do serviço de terceiros, instabilidade neles podem atrapalhar o envio dos seus lembretes
+        </li>
+    </ul>
+
+
+    <mat-card-title id="tecnologias">Custo</mat-card-title>
+    <p>
+        Atualmente estamos hospedados no serviço do Google chamado de <a href="https://firebase.google.com">Firebase</a>
+        e no <a href="https://www.heroku.com/">Heroku</a>, ambas plataformas disponibilizam um nível gratuíto que atenderá
+        as necessidades da ferramenta. Não planejo cobrar pelo uso, então SIM, o uso desta ferramenta será gratuíto, pode
+        ficar tranquilo! :)
+    </p>
+    <mat-card-title id="contribuindo">Contribuindo</mat-card-title>
+    <p>
+        Este projeto é opensource e está disponível no <a href="https://github.com/agendaodonto/webapp">GitHub</a> sob a
+        licensa GNU GPL v3.0
+    </p>
+    <p>
+        Contribuições são bem vindas! Submeta seus pull-requests para melhorar esse software.
+    </p>
+    <div fxLayout="row" fxLayoutAlign="end end">
+        <iframe src="https://ghbtns.com/github-btn.html?user=agendaodonto&repo=webapp&type=star&count=false&size=large" frameborder="0"
+            scrolling="0" width="76px" height="30px"></iframe>
+    </div>
+</mat-card>

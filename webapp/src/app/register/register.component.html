@@ -1,0 +1,67 @@
+<div fxLayout="row" fxLayoutAlign="center center">
+    <mat-card class="container">
+        <mat-card-title>Cadastro</mat-card-title>
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <div fxLayout="row">
+                <mat-form-field fxFlex="100">
+                    <input matInput type="text" placeholder="Nome" name="first_name" formControlName="first_name">
+                    <mat-error>{{ registerForm.getControlMessages('first_name') }}</mat-error>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row">
+                <mat-form-field fxFlex="100">
+                    <input matInput type="text" placeholder="Sobrenome" name="last_name" formControlName="last_name">
+                    <mat-error>{{ registerForm.getControlMessages('last_name') }}</mat-error>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row">
+                <mat-select placeholder="Sexo" fxFlex="100" formControlName="sex" class="flex">
+                    <mat-option [value]="'M'">Masculino</mat-option>
+                    <mat-option [value]="'F'">Feminino</mat-option>
+                </mat-select>
+            </div>
+            <div fxLayout="row">
+                <mat-form-field fxFlex="100">
+                    <input matInput type="text" placeholder="CRO" name="cro" formControlName="cro">
+                    <mat-error>{{ registerForm.getControlMessages('cro') }}</mat-error>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row">
+                <mat-select placeholder="Estado Emissor (CRO)" fxFlex="100" formControlName="cro_state" class="flex">
+                    <mat-option *ngFor="let state of states" [value]="state.value">
+                        {{ state.display_name }}
+                    </mat-option>
+                </mat-select>
+            </div>
+            <div fxLayout="row">
+                <mat-form-field fxFlex="100">
+                    <input matInput type="email" placeholder="Email" name="email" formControlName="email">
+                    <mat-error>{{ registerForm.getControlMessages('email') }}</mat-error>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row">
+                <mat-form-field fxFlex="100" formGroupName="password">
+                    <input matInput type="password" placeholder="Senha" name="password" formControlName="password">
+                    <mat-error>{{ registerForm.getControlMessages('password') }}</mat-error>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row">
+                <mat-form-field fxFlex="100" formGroupName="password">
+                    <input matInput type="password" placeholder="Confirme a sua senha" name="confirm_password" formControlName="confirm_password">
+                    <mat-error>{{ registerForm.getControlMessages('password') }}</mat-error>
+                </mat-form-field>
+            </div>
+            <div fxLayout="row">
+                <mat-error *ngFor="let error of errors"> {{ error }}</mat-error>
+            </div>
+        </form>
+        <div class="overlay" *ngIf="isLoading">
+            <mat-spinner style="margin: 0 auto"></mat-spinner>
+        </div>
+        <p fxLayoutAlign="end center">
+            <button mat-raised-button color="accent" (click)="onSubmit()" [disabled]="!registerForm.valid" [appBtnLoader]="isSubmitting">
+                <span *ngIf="!isSubmitting">Criar Conta</span>
+            </button>
+        </p>
+    </mat-card>
+</div>

@@ -1,0 +1,13 @@
+<div fxLayout="row" fxLayoutAlign="end center">
+    <div>
+        {{ startRange }}-{{ endRange }} de {{ count }}
+    </div>
+    <div>
+        <button mat-button (click)="prevPage()" [disabled]="!canPrevious()">
+            <mat-icon>keyboard_arrow_left</mat-icon>
+    </button>
+        <button mat-button (click)="nextPage()" [disabled]="!canNext()">
+            <mat-icon>keyboard_arrow_right</mat-icon>
+    </button>
+    </div>
+</div>

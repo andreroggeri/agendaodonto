@@ -1,0 +1,53 @@
+<mat-card class="container">
+    <mat-card-title>Pacientes</mat-card-title>
+    <div class="app-actions" fxLayout="column">
+        <div fxLayoutAlign="end center">
+            <a mat-raised-button color="accent" [routerLink]="['/pacientes/criar']">Novo</a>
+        </div>
+        <form [formGroup]="filterForm" (submit)="filter()" fxLayout.gt-md="row" fxLayout.lt-md="column"
+            fxLayoutAlign.gt-md="end center" fxLayoutAlign.lt-md="start stretch">
+            <mat-form-field>
+                <mat-select placeholder="Filtro" formControlName="field">
+                    <mat-option [value]="'fullName'">Nome</mat-option>
+                    <mat-option [value]="'phone'">Telefone</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <input matInput placeholder="Pesquisar" formControlName="value">
+                <button mat-button mat-icon-button matSuffix>
+                    <mat-icon>search</mat-icon>
+                </button>
+            </mat-form-field>
+        </form>
+    </div>
+    <div fxLayout="column">
+
+        <mat-progress-bar mode="query" *ngIf="datasource?.isLoading"></mat-progress-bar>
+
+        <table mat-table [dataSource]="datasource" matSort (matSortChange)="sorted($event)">
+
+            <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Nome </th>
+                <td mat-cell *matCellDef="let patient"> {{patient.name}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="lastName">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Sobrenome </th>
+                <td mat-cell *matCellDef="let patient"> {{patient.last_name}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="clinic">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Clinica </th>
+                <td mat-cell *matCellDef="let patient"> {{patient.clinic.name}} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+            <tr class="actionable" mat-row *matRowDef="let rowData; columns: columnsToDisplay"
+                (click)="rowClicked(rowData)">
+
+            </tr>
+        </table>
+        <mat-paginator [length]="datasource.count" [pageIndex]="0" [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]">
+        </mat-paginator>
+    </div>
+</mat-card>

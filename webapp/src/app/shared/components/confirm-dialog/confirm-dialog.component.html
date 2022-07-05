@@ -1,0 +1,8 @@
+<div fxLayout="column" fxLayoutAlign="center none" class="dialog-container">
+  <h1 mat-dialog-title fxLayoutAlign="start start">{{ ref.title }}</h1>
+  <div>{{ ref.message }}</div>
+  <div mat-dialog-actions fxLayoutAlign="end center">
+    <button mat-button mat-dialog-close="false">Não</button>
+    <button mat-raised-button color="warn" mat-dialog-close="true">Sim</button>
+  </div>
+</div>

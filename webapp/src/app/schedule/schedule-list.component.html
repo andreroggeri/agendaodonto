@@ -1,0 +1,73 @@
+<mat-card class="container">
+    <mat-card-title>Lista de Agendamentos</mat-card-title>
+    <div class="app-actions">
+        <form [formGroup]="filterForm" (submit)="filter()" fxLayout.gt-md="row" fxLayout.lt-md="column" fxLayoutAlign.gt-md="end center"
+            fxLayoutAlign.lt-md="start stretch">
+            <mat-form-field fxLayout.lt-md="column" fxLayout.gt-md="row">
+                <input placeholder="Data Inicio" matInput [matDatepicker]="startDatePicker" formControlName="startDate">
+                <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
+                <mat-datepicker #startDatePicker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field fxLayout.lt-md="column">
+                <input placeholder="Data Fim" matInput [matDatepicker]="endDatePicker" formControlName="endDate">
+                <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
+                <mat-datepicker #endDatePicker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field fxLayout.lt-md="column">
+                <mat-select placeholder="Status" formControlName="status">
+                    <mat-option> - </mat-option>
+                    <mat-option [value]="'0'">Agendado</mat-option>
+                    <mat-option [value]="'1'">Compareceu</mat-option>
+                    <mat-option [value]="'2'">Faltou</mat-option>
+                    <mat-option [value]="'3'">Cancelou</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <button mat-button fxLayout.lt-md="column" fxLayoutAlign="center center">
+                <mat-icon>search</mat-icon>
+            </button>
+
+        </form>
+        <div fxLayoutAlign="end center" fxLayoutGap="10px" *ngIf="selection.selected.length > 0">
+            <button type="button" mat-raised-button class="attended" (click)="setScheduleStatus(1)" [appBtnLoader]="isUpdating">
+                <span *ngIf="!isUpdating">Compareceu</span>
+            </button>
+            <button type="button" mat-raised-button color="warn" (click)="setScheduleStatus(2)" [appBtnLoader]="isUpdating">
+                <span *ngIf="!isUpdating">Faltou</span>
+            </button>
+            <button type="button" mat-raised-button (click)="setScheduleStatus(3)" [appBtnLoader]="isUpdating">
+                <span *ngIf="!isUpdating">Cancelou</span>
+            </button>
+        </div>
+    </div>
+    <mat-progress-bar [mode]="'query'" *ngIf="dataSource.isLoading"></mat-progress-bar>
+    <mat-table [dataSource]="dataSource">
+        <ng-container matColumnDef="select">
+            <mat-header-cell *matHeaderCellDef>
+                <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()" [indeterminate]="selection.hasValue() && !isAllSelected()">
+                </mat-checkbox>
+            </mat-header-cell>
+            <mat-cell *matCellDef="let row">
+                <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null" [checked]="selection.isSelected(row)">
+                </mat-checkbox>
+            </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="date">
+            <mat-header-cell *matHeaderCellDef> Data </mat-header-cell>
+            <mat-cell *matCellDef="let schedule"> {{ schedule.date | date:'short' }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="patient">
+            <mat-header-cell *matHeaderCellDef> Paciente </mat-header-cell>
+            <mat-cell *matCellDef="let schedule"> {{ schedule.patient.name }} {{ schedule.patient.last_name }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+            <mat-cell *matCellDef="let schedule">
+                <app-schedule-status [status]="schedule.status"></app-schedule-status>
+            </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+    </mat-table>
+    <mat-paginator [length]="dataSource.count" [pageIndex]="0" [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]">
+    </mat-paginator>
+</mat-card>

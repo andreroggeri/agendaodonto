@@ -1,0 +1,44 @@
+<mat-sidenav-container>
+  <mat-sidenav #sidenav>
+    <div class="sidenav-header">
+      <img class="sidenav-image"
+        src="https://www.gravatar.com/avatar/{{ getProfileUrl() }}?d=http%3A%2F%2Fi.imgur.com%2FtwA93qd.jpg">
+      <p *ngIf="loginService.isLogged()">
+        {{ loginService.getLocalUserInfo()?.first_name + " " +loginService.getLocalUserInfo()?.last_name}}
+      </p>
+    </div>
+    <mat-list>
+      <ng-container *ngFor="let menu of sideNavMenus">
+        <mat-list-item class="link" routerLinkActive="active" [routerLink]="[menu.link]" (click)="closeSideNav()"
+          *ngIf="shouldDisplayMenu(menu) && !menu.submenus">
+          {{ menu.name }}
+        </mat-list-item>
+
+        <mat-accordion *ngIf="shouldDisplayMenu(menu) && menu.submenus">
+          <mat-expansion-panel class="mat-elevation-z0">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <p style="font-size: 16px;">{{menu.name}}</p>
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <mat-list-item class="link" routerLinkActive="active" [routerLink]="[submenu.link]" (click)="closeSideNav()" *ngFor="let submenu of menu.submenus">
+              {{ submenu.name }}
+            </mat-list-item>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </ng-container>
+      <mat-list-item class="link" (click)="logout()" *ngIf="loginService.isLogged()">
+        Sair
+      </mat-list-item>
+    </mat-list>
+  </mat-sidenav>
+  <div class="content">
+    <mat-toolbar color="primary">
+      <button mat-button class="toggle-sidenav" (click)="sidenav.toggle()">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span>Agenda Odonto</span>
+    </mat-toolbar>
+    <router-outlet></router-outlet>
+  </div>
+</mat-sidenav-container>

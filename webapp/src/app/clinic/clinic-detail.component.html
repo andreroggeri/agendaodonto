@@ -1,0 +1,60 @@
+<mat-card class="container">
+    <mat-card-title>Clinica</mat-card-title>
+    <form [formGroup]="clinicForm" (submit)="onSubmit()" [appLoadingOverlay]="isLoading">
+        <input type="hidden" formControlName="id">
+
+        <div fxLayout="row">
+            <mat-form-field fxFlex="100">
+                <input matInput placeholder="Nome" formControlName="name">
+                <mat-error> {{ clinicForm.getControlMessages('name') }} </mat-error>
+            </mat-form-field>
+        </div>
+        <div fxLayout="row">
+            <mat-form-field fxFlex="100">
+                <input type="text" matInput [formControl]="dentistCompleter" placeholder="Digite o CRO" [matAutocomplete]="auto">
+            </mat-form-field>
+        </div>
+        <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayDentist">
+            <mat-option *ngFor="let dentist of filteredOptions | async" [value]="dentist">
+                {{ dentist.first_name }} {{ dentist.last_name }}
+            </mat-option>
+        </mat-autocomplete>
+        <div fxLayout="row">
+            <table class="material">
+                <thead>
+                    <tr>
+                        <td>CRO</td>
+                        <td>Nome</td>
+                        <td>Sobrenome</td>
+                        <td>Ações</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let dentist of clinicForm.controls.dentists.value">
+                        <td>{{ dentist.cro }}</td>
+                        <td>{{ dentist.first_name}}</td>
+                        <td>{{ dentist.last_name }}</td>
+                        <td>
+                            <button type="button" mat-mini-fab color="warn" class="fab-no-shadow" (click)="removeDentist(dentist)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                        </td>
+                    </tr>
+                    <tr *ngIf="!isLoading && clinicForm?.controls.dentists.value.length == 0">
+                        <td class="text-center" colspan="4">
+                            Nenhum dentista associado
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="app-actions" fxLayoutGap="10px" fxLayoutAlign="end center">
+            <button type="button" mat-raised-button color="warn" *ngIf="clinicForm.controls.id.value != ''" (click)="onDelete()" [appBtnLoader]="isSubmitting">
+               <span *ngIf="!isSubmitting">Apagar</span>
+            </button>
+            <button mat-raised-button color="accent" [disabled]="!clinicForm.valid" [appBtnLoader]="isSubmitting">
+                <span *ngIf="!isSubmitting">Salvar</span>
+            </button>
+        </div>
+    </form>
+</mat-card>

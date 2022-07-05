@@ -1,0 +1,56 @@
+<mat-card class="container">
+    <mat-card-title fxLayout="row" fxLayoutAlign="space-between center">
+        Agendamento
+        <app-notification-status *ngIf="schedule" [status]="schedule.notification_status"></app-notification-status>
+    </mat-card-title>
+    <div fxLayoutAlign="end center" fxLayout="row" *ngIf="!scheduleId">
+        <mat-slide-toggle #continuousMode>Modo contínuo</mat-slide-toggle>
+    </div>
+    <form [formGroup]="scheduleForm" (submit)="onSubmit()" appAutoFocus [appLoadingOverlay]="isLoading">
+        <input type="hidden" formControlName="id">
+
+        <div fxLayout="row">
+            <mat-form-field fxFlex="100">
+                <input matInput placeholder="Paciente" formControlName="patient" [matAutocomplete]="auto">
+                <button type="button" mat-button matSuffix (click)="patientDialog()" *ngIf="scheduleForm.controls.patient.value?.id">
+                    <mat-icon>face</mat-icon>
+                </button>
+                <mat-error>{{ scheduleForm.getControlMessages('patient') }}</mat-error>
+            </mat-form-field>
+        </div>
+        <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayPatient" (optionSelected)="patientSelected()">
+            <ng-container *ngIf="filteredPatients | async; let filteredPatients">
+                <mat-option *ngFor="let option of filteredPatients.results" [value]="option">
+                    {{ option.name + " " + option.last_name}}
+                </mat-option>
+            </ng-container>
+        </mat-autocomplete>
+        <div fxLayout.gt-lg="row" fxLayout.lt-lg="column">
+            <!-- Remove this after fixed (https://github.com/angular/material2/issues/8012)-->
+            <mat-form-field fxFlex="70">
+                <input matInput type="datetime-local" placeholder="Data" formControlName="date">
+            </mat-form-field>
+            <mat-form-field fxFlex="30" style="top:1px;">
+                <input matInput type="number" placeholder="Duração (Minutos)" formControlName="duration">
+            </mat-form-field>
+        </div>
+        <div fxLayout="row">
+            <mat-form-field fxFlex="100">
+                <mat-select placeholder="Dentista" formControlName="dentist" [compareWith]="defaultMatcher">
+                    <mat-option *ngFor="let dentist of dentists" [value]="dentist">{{ dentist.first_name }}</mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <mat-dialog-content>
+            <div class="app-actions" fxLayoutGap="10px" fxLayoutAlign="end center">
+                <button type="button" mat-raised-button color="warn" *ngIf="scheduleForm.controls.id.value != ''"
+                    (click)="onDelete()" [appBtnLoader]="isSubmitting">
+                    <span *ngIf="!isSubmitting">Apagar</span>
+                </button>
+                <button mat-raised-button color="accent" [disabled]="!scheduleForm.valid" [appBtnLoader]="isSubmitting">
+                    <span *ngIf="!isSubmitting">Salvar</span>
+                </button>
+            </div>
+        </mat-dialog-content>
+    </form>
+</mat-card>

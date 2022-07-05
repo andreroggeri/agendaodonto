@@ -1,0 +1,103 @@
+<div class="container" fxLayout="column" fxLayoutGap="20px">
+    <div fxLayout="row" fxLayoutAlign="start start">
+        <button mat-icon-button (click)="previousMonth()">
+            <mat-icon>keyboard_arrow_left</mat-icon>
+        </button>
+        <h1 class="current-period">{{ currentMonthLabel }}</h1>
+        <button mat-icon-button (click)="nextMonth()">
+            <mat-icon>keyboard_arrow_right</mat-icon>
+        </button>
+    </div>
+    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="start start" fxLayoutAlign.lt-md="start stretch"
+        fxLayoutGap="20px">
+        <!--Pending schedules cards -->
+        <mat-card class="mini-report actionable" fxFlex="33" fxLayout="column" (click)="viewPendingSchedules()">
+            <mat-card-title>Consultas a confirmar</mat-card-title>
+            <div fxLayoutAlign="start start"
+                *ngIf="pendingSchedules | async as pendingSchedules; else pendingSchedulesLoading">
+                <mat-icon class="mini-report">schedule</mat-icon>
+                <p fxFlex class="huge" fxLayoutAlign="end end">{{ pendingSchedules.count }}</p>
+            </div>
+            <ng-template #pendingSchedulesLoading>
+                <app-loading-overlay></app-loading-overlay>
+            </ng-template>
+            <div fxLayoutAlign="end end">
+                <mat-hint>Clique para visualizar</mat-hint>
+            </div>
+        </mat-card>
+        <!--Attendance rate card -->
+        <mat-card class="mini-report actionable" fxFlex="33" fxLayout="column" (click)="viewSchedules()">
+            <mat-card-title>Taxa de comparecimento</mat-card-title>
+            <div fxLayoutAlign="start start" *ngIf="attendanceRatio | async as attendanceRatio; else attendanceLoading">
+                <mat-icon class="mini-report">account_circle</mat-icon>
+                <div fxFlex fxLayoutAlign="end end">
+                    <p class="huge">{{ attendanceRatio[startDate].ratio | percent:'0.0-1' }}</p>
+                    <span style="color:#FFEB3B"
+                        *ngIf="calculatePercentage(attendanceRatio[startDate].ratio, attendanceRatio[refStartDate].ratio) == 0">
+                        ({{ calculatePercentage(attendanceRatio[startDate].ratio, attendanceRatio[refStartDate].ratio) }}%)
+                    </span>
+                    <span style="color:red"
+                        *ngIf="calculatePercentage(attendanceRatio[startDate].ratio, attendanceRatio[refStartDate].ratio) < 0">
+                        ({{ calculatePercentage(attendanceRatio[startDate].ratio, attendanceRatio[refStartDate].ratio) }}%)
+                    </span>
+                    <span style="color:green"
+                        *ngIf="calculatePercentage(attendanceRatio[startDate].ratio, attendanceRatio[refStartDate].ratio) > 0">
+                        (+
+                        {{ calculatePercentage(attendanceRatio[startDate].ratio, attendanceRatio[refStartDate].ratio) }}%)
+                    </span>
+                </div>
+            </div>
+            <ng-template #attendanceLoading>
+                <app-loading-overlay></app-loading-overlay>
+            </ng-template>
+            <div fxLayoutAlign="end end">
+                <mat-hint>Clique para visualizar</mat-hint>
+            </div>
+        </mat-card>
+        <!--Patient count card -->
+        <mat-card class="mini-report actionable" fxFlex="33" fxLayout="column" (click)="viewPatients()">
+            <mat-card-title>Pacientes</mat-card-title>
+            <div fxLayoutAlign="start start" *ngIf="patients | async as patients; else patientsLoading">
+                <mat-icon class="mini-report">person_add</mat-icon>
+                <div fxFlex fxLayoutAlign="end end">
+                    <p class="huge">{{ patients.count }}</p>
+                </div>
+            </div>
+            <ng-template #patientsLoading>
+                <app-loading-overlay></app-loading-overlay>
+            </ng-template>
+            <div fxLayoutAlign="end end">
+                <mat-hint>Clique para visualizar</mat-hint>
+            </div>
+        </mat-card>
+    </div>
+
+    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="start start" fxLayoutAlign.lt-md="start stretch" fxLayoutGap="20px">
+        <!--Schedule count card -->
+        <mat-card fxFlex="45" class="dental-plan-report actionable" fxLayoutAlign="space-between strech"fxLayout="column" (click)="viewSchedules()">
+            <mat-card-title>Agendamentos</mat-card-title>
+            <div *ngIf="dentalPlanStats | async as dentalPlanStats; else chartLoading">
+                <ngx-charts-advanced-pie-chart class="chart-container" [results]="dentalPlanStats"></ngx-charts-advanced-pie-chart>
+            </div>
+            <div fxLayoutAlign="end end">
+                <mat-hint>Clique para visualizar</mat-hint>
+            </div>
+        </mat-card>
+        <!-- Attendance Chart -->
+        <mat-card fxFlex="55" class="chart-report" fxLayout="column">
+            <mat-card-title>Atendimentos por mês</mat-card-title>
+            <div class="chart-container" *ngIf="attendance | async as attendance; else chartLoading">
+                <ngx-charts-area-chart [results]="attendance" [xAxis]="true" [yAxis]="true" [curve]="curveFunction"
+                    [customColors]="attendanceChartColors">
+
+                </ngx-charts-area-chart>
+            </div>
+            <ng-template #chartLoading>
+                <app-loading-overlay></app-loading-overlay>
+            </ng-template>
+        </mat-card>
+    </div>
+    <div fxLayout="row" fxLayout.lt-md="column" fxLayoutAlign="center start" fxLayoutAlign.lt-md="start stretch">
+
+    </div>
+</div>

@@ -1,0 +1,33 @@
+<mat-card class="container">
+    <mat-card-title>
+        <span>Tipos de Despesas </span>
+    </mat-card-title>
+    <div class="app-actions" fxLayoutAlign="end center">
+        <a mat-raised-button color="accent" [routerLink]="['/tipo-transacao', 'criar']">Novo</a>
+    </div>
+    <ng-container *ngIf="hasClinics$ | async">
+        <mat-form-field>
+            <mat-select placeholder="Clinica" [value]="selectedClinic$ | async"
+                (selectionChange)="clinicSelected($event)">
+                <mat-option [value]="clinic" *ngFor="let clinic of clinic$ | async">{{clinic.name}}</mat-option>
+            </mat-select>
+        </mat-form-field>
+        <div fxLayout="row" fxLayoutAlign="end end">
+
+        </div>
+        <app-transaction-type-list></app-transaction-type-list>
+    </ng-container>
+
+    <app-empty-state image="empty-box" *ngIf="empty$ | async">
+        <p>Você ainda não tem clinicas cadastradas.</p>
+        <p>Cadastre uma clinica para começar a gestão financeira</p>
+    </app-empty-state>
+
+    <app-empty-state image="error-cloud" *ngIf="error$ | async">
+        <p>Ocorreu um erro ao recuperar os dados</p>
+        <p>Tente novamente mais tarde</p>
+    </app-empty-state>
+
+    <mat-progress-bar mode="query" *ngIf="loading$ | async"></mat-progress-bar>
+
+</mat-card>
