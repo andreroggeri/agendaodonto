@@ -7,9 +7,8 @@ on:
     paths:
       - webapp/**
   pull_request:
-    types: [opened, reopened]
-    paths:
-      - webapp/**
+    # paths:
+    #   - webapp/**
 
 jobs:
   build:
