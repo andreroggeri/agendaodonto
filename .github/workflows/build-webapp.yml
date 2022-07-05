@@ -31,10 +31,10 @@ jobs:
       run: npm i --ci
 
     - name: Lint
-      run: g lint
+      run: npm run lint
     
     - name: Run tests
-      run: ng test --code-coverage=true --watch=false --browsers=ChromeHeadless
+      run: npm run test
 
     - name: Build
-      run: ng b -c=staging --aot
+      run: npm run build:staging
