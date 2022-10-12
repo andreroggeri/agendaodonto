@@ -64,7 +64,7 @@ async function handleButtonResponse(client: Messenger, from: string, selectedBut
   await messenger.init();
 
   messenger.onMessage(({ from, content }) => {
-    console.log('message received', { from, content, includes: !from.includes('0437') });
+    console.log('message received', { from, content });
     if (settings.TEST_MODE && content !== '!ping' && !from.includes('0437')) {
       console.info('TEST_MODE enabled, Ignoring message !');
       return;
