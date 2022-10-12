@@ -2,3 +2,4 @@ node_modules/
 dist/
 session*.json
 .env
+baileys_auth_info/

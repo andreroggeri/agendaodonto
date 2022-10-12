@@ -1,34 +1,27 @@
-import { differenceInHours } from "date-fns";
-import { WhatsappChatFlow } from "./buttons";
+import { differenceInHours } from 'date-fns';
+import { WhatsappChatFlow } from './buttons';
 
 export class ClientContext {
-    constructor(
-        private currentFlow: WhatsappChatFlow,
-        private lastInteraction?: Date,
-    ) { }
+  constructor(private currentFlow: WhatsappChatFlow, private lastInteraction?: Date) {}
 
-    get isLastInteractionTooOld(): boolean {
-        if (!this.lastInteraction) {
-            return true;
-        }
-        const diff = (differenceInHours(new Date(), this.lastInteraction) > 24);
-        return diff;
+  get isLastInteractionTooOld(): boolean {
+    if (!this.lastInteraction) {
+      return true;
     }
+    const diff = differenceInHours(new Date(), this.lastInteraction) > 12;
+    return diff;
+  }
 
+  static fromObject(data: ClientContext): ClientContext {
+    return new ClientContext(data.currentFlow as WhatsappChatFlow, new Date(data['lastInteraction']));
+  }
 
-    static fromObject(data: ClientContext): ClientContext {
+  setCurrentFlow(flow: WhatsappChatFlow) {
+    this.lastInteraction = new Date();
+    this.currentFlow = flow;
+  }
 
-        return new ClientContext(data.currentFlow as WhatsappChatFlow, new Date(data['lastInteraction']))
-    }
-
-    setCurrentFlow(flow: WhatsappChatFlow) {
-        this.lastInteraction = new Date();
-        this.currentFlow = flow;
-    }
-
-    getCurrentFlow(): WhatsappChatFlow {
-        return this.currentFlow;
-    }
-
-
+  getCurrentFlow(): WhatsappChatFlow {
+    return this.currentFlow;
+  }
 }
