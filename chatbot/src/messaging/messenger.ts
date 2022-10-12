@@ -41,15 +41,12 @@ export class Messenger {
   }
   onMessage(callback: (message: { from: string; content: string }) => void) {
     this.socket.ev.on('messages.upsert', (event) => {
-      console.log('onMessage', event.type);
 
       if (event.type === 'notify') {
         event.messages.forEach((message) => {
-          console.log({
-            buttonMessage: message.message.buttonsMessage,
-            buttonResponse: message.message.buttonsResponseMessage,
-          });
-          callback({ from: message.key.remoteJid, content: message.message?.conversation });
+          if (message.key.remoteJid !== 'status@broadcast') {
+            callback({ from: message.key.remoteJid, content: message.message?.conversation });
+          }
         });
       }
     });
