@@ -115,7 +115,6 @@ export class Messenger {
     }
 
     this.storeHandlerInterval = setInterval(() => {
-      console.info('Saving store');
       const data = JSON.stringify(this.store.toJSON());
       this.redis.set(STORE_KEY, data);
     }, 10_000);
