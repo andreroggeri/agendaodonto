@@ -41,7 +41,6 @@ export class Messenger {
   }
   onMessage(callback: (message: { from: string; content: string }) => void) {
     this.socket.ev.on('messages.upsert', (event) => {
-
       if (event.type === 'notify') {
         event.messages.forEach((message) => {
           if (message.key.remoteJid !== 'status@broadcast') {
@@ -100,6 +99,15 @@ export class Messenger {
     await this.socket.waitForSocketOpen();
 
     this.initStoreHandler();
+  }
+
+  async status() {
+    const timeout = setTimeout(() => {
+      throw new Error('timeout');
+    }, 5_000);
+    this.socket.waitForSocketOpen();
+    clearTimeout(timeout);
+    return { ok: true };
   }
 
   private async initStoreHandler() {

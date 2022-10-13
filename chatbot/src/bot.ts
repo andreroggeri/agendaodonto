@@ -4,6 +4,7 @@ import { ClientContext } from './context';
 import { Messenger } from './messaging/messenger';
 import { redis } from './redis';
 import { settings } from './settings';
+import * as express from 'express';
 
 async function saveContext(messageAuthor: string, context: ClientContext) {
   const content = JSON.stringify(context);
@@ -87,5 +88,18 @@ async function handleButtonResponse(client: Messenger, from: string, selectedBut
     handleButtonResponse(messenger, from, selectedButtonId);
   });
 
-  console.log('Chatbot is running :)');
+  const app = express();
+
+  app.get('/healthcheck', async (req, res) => {
+    try {
+      const status = await messenger.status();
+      return res.status(200).json(status);
+    } catch {
+      return res.status(500).json({ ok: false });
+    }
+  });
+
+  app.listen(settings.PORT, () => {
+    console.log(`Chatbot is running on :${settings.PORT}`);
+  });
 })();
