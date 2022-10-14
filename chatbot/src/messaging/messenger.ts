@@ -43,7 +43,7 @@ export class Messenger {
     this.socket.ev.on('messages.upsert', (event) => {
       if (event.type === 'notify') {
         event.messages.forEach((message) => {
-          if (message.key.remoteJid !== 'status@broadcast') {
+          if (message.key.remoteJid !== 'status@broadcast' && message.key.fromMe === false) {
             callback({ from: message.key.remoteJid, content: message.message?.conversation });
           }
         });
@@ -105,9 +105,9 @@ export class Messenger {
     const timeout = setTimeout(() => {
       throw new Error('timeout');
     }, 5_000);
-    this.socket.waitForSocketOpen();
+    const blockList = await this.socket.fetchBlocklist();
     clearTimeout(timeout);
-    return { ok: true };
+    return { ok: true, blockList };
   }
 
   private async initStoreHandler() {
