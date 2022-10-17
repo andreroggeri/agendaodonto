@@ -9,6 +9,12 @@ services:
     restart: always
     volumes:
       - ./baileys_auth_info:/app/dist/baileys_auth_info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://chatbot:3000/healthcheck"]
+      interval: 10s
+      timeout: 10s
+      retries: 1
+      start_period: 10s
 
   redis:
     image: redis

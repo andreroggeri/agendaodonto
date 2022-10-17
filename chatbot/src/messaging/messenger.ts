@@ -10,6 +10,7 @@ import slugify from 'slugify';
 import { WhatsappButton } from '../buttons';
 
 const STORE_KEY = 'whatsapp_store';
+const retryMap = {};
 
 export class Messenger {
   private socket: ReturnType<typeof makeWASocket>;
@@ -43,7 +44,11 @@ export class Messenger {
     this.socket.ev.on('messages.upsert', (event) => {
       if (event.type === 'notify') {
         event.messages.forEach((message) => {
-          if (message.key.remoteJid !== 'status@broadcast' && message.key.fromMe === false) {
+          if (
+            message.key.remoteJid !== 'status@broadcast' &&
+            message.key.fromMe === false &&
+            message.message.conversation
+          ) {
             callback({ from: message.key.remoteJid, content: message.message?.conversation });
           }
         });
@@ -73,6 +78,7 @@ export class Messenger {
       version,
       auth: state,
       printQRInTerminal: true,
+      msgRetryCounterMap: retryMap,
     });
 
     this.socket.ev.process(async (event) => {
