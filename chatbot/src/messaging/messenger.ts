@@ -86,12 +86,12 @@ export class Messenger {
         const update = event['connection.update'];
         const { connection, lastDisconnect } = update;
         if (connection === 'close') {
-          // reconnect if not logged out
           if ((lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut) {
-            await this.init();
+            console.warn('You are logged out.');
+            process.exit(1);
           } else {
-            // TODO: Restart application if this happens
             console.warn('Connection closed. You are logged out.');
+            process.exit(1);
           }
         }
 
