@@ -47,7 +47,7 @@ export class Messenger {
           if (
             message.key.remoteJid !== 'status@broadcast' &&
             message.key.fromMe === false &&
-            message.message.conversation
+            message.message?.conversation
           ) {
             callback({ from: message.key.remoteJid, content: message.message?.conversation });
           }
