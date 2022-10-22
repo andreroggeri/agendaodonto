@@ -1,0 +1,10 @@
+Seu cadastro está quase pronto.
+
+Clique no seguinte link para confirmar seu email.
+{% block reset_link %}
+{{ protocol }}://{{ domain }}/{{ url }}
+{% endblock %}
+
+Obrigado por utilizar o nosso site!
+
+Equipe Agenda Odonto

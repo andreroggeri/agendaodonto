@@ -1,0 +1,36 @@
+{
+  "name": "Agenda Odonto Backend",
+  "description": "Agenda Odonto Backend",
+  "scripts": {
+    "dokku": {
+      "postdeploy": "python manage.py migrate --no-input"
+    }
+  },
+  "env": {
+    "DJANGO_SETTINGS_MODULE": {
+      "required": true
+    },
+    "EMAIL_HOST": {
+      "required": true
+    },
+    "EMAIL_HOST_PASSWORD": {
+      "required": true
+    },
+    "EMAIL_HOST_USER": {
+      "required": true
+    },
+    "SMS_GATEWAY_USER": {
+      "required": true
+    },
+    "SMS_GATEWAY_PASSWORD": {
+      "required": true
+    }
+  },
+  "formation": {
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+# .coveragerc to control coverage.py
+[run]
+branch = True
+source = app
+omit =
+    app/schedule/migrations/*
+    app/schedule/admin/*
+    app/schedule/apps.py
+    app/schedule/tests/*
+    app/schedule/libs/sms_gateway.py
+    app/settings/*
+    app/wsgi.py
+    app/schedule/management/commands/generate_test_data.py
+
+[report]
+# Regexes for lines to exclude from consideration
+
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain about missing debug-only code:
+    def __repr__
+    def __str__
+
+ignore_errors = True
+
+[html]
+directory = coverage_html_report
