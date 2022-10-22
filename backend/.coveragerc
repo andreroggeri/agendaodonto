@@ -11,6 +11,7 @@ omit =
     app/settings/*
     app/wsgi.py
     app/schedule/management/commands/generate_test_data.py
+relative_files = True
 
 [report]
 # Regexes for lines to exclude from consideration
