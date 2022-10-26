@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "TEST_MODE=true tsnd src/bot.ts",
     "build": "tsc",
-    "lint": "eslint src/**/*.ts --fix"
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
   },
   "repository": {
     "type": "git",
