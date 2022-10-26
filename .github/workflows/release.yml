@@ -3,9 +3,10 @@ on:
   push:
     branches:
       - main
-      - backend-github-actions
+      - chatbot-deployment
     paths:
       - 'backend/**'
+      - 'chatbot/**'
       - '.github/workflows/release.yml'
 
 
@@ -13,14 +14,42 @@ jobs:
   release-backend-staging:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: dokku/github-action@master
+      - name: Check changes on backend
+        id: changed-files
+        uses: tj-actions/changed-files@v34
+        with:
+          files: |
+            backend/**
+      - name: Deploy
+        uses: dokku/github-action@master
+        if: steps.changed-files.outputs.any_changed == 'true'
         with:
           git_remote_url: ${{ secrets.DOKKU_STAGING }}
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
           git_push_flags: '--force'
+  
+  release-chatbot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check changes on chatbot
+        id: changed-files
+        uses: tj-actions/changed-files@v34
+        with:
+          files: |
+            chatbot/**
+      - name: Deploy
+        uses: dokku/github-action@master
+        if: steps.changed-files.outputs.any_changed == 'true'
+        with:
+          git_remote_url: ${{ secrets.DOKKU_MESSAGING }}
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
+          #  git_push_flags: '--force'
 
 #  release-front-end-staging:
 #    runs-on: ubuntu-latest
