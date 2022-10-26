@@ -9,6 +9,7 @@
     "sourceMap": true,
     "incremental": true,
     "skipLibCheck": true,
-    "tsBuildInfoFile": "./dist/.tsbuildinfo"
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "strictNullChecks": true
   }
 }

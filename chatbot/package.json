@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "TEST_MODE=true tsnd src/bot.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "lint": "eslint src/**/*.ts --fix"
   },
   "repository": {
     "type": "git",
@@ -36,8 +37,14 @@
     "@types/ioredis": "^4.27.8",
     "@types/node": "^16.11.6",
     "@types/redis": "^2.8.32",
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
+    "eslint": "^8.26.0",
+    "eslint-config-standard-with-typescript": "^23.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.3.0",
+    "eslint-plugin-promise": "^6.1.1",
     "qrcode-terminal": "^0.12.0",
     "ts-node-dev": "^1.1.8",
-    "typescript": "^4.4.4"
+    "typescript": "^4.8.4"
   }
 }

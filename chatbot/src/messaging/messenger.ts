@@ -2,6 +2,7 @@ import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
   makeInMemoryStore,
+  proto,
   useMultiFileAuthState,
 } from '@adiwajshing/baileys';
 import { Boom } from '@hapi/boom';
@@ -17,12 +18,13 @@ export class Messenger {
   private store: ReturnType<typeof makeInMemoryStore>;
   private storeHandlerInterval: NodeJS.Timer;
 
-  constructor(private redis: Redis) {}
+  constructor(private readonly redis: Redis) {}
 
-  sendMessage(to: string, content: string) {
-    this.socket.sendMessage(to, { text: content });
+  async sendMessage(to: string, content: string): Promise<proto.WebMessageInfo | undefined> {
+    return await this.socket.sendMessage(to, { text: content });
   }
-  sendButtons(to: string, text: string, buttons: WhatsappButton[]) {
+
+  async sendButtons(to: string, text: string, buttons: WhatsappButton[]): Promise<proto.WebMessageInfo | undefined> {
     const buttonsMessage = buttons.map((button) => {
       return {
         buttonId: slugify(button.text, { lower: true }),
@@ -38,25 +40,24 @@ export class Messenger {
       buttons: buttonsMessage,
     };
 
-    this.socket.sendMessage(to, buttonMessage);
+    return await this.socket.sendMessage(to, buttonMessage);
   }
-  onMessage(callback: (message: { from: string; content: string }) => void) {
+
+  onMessage(callback: (message: { from: string, content: string }) => void): void {
     this.socket.ev.on('messages.upsert', (event) => {
       if (event.type === 'notify') {
         event.messages.forEach((message) => {
-          if (
-            message.key.remoteJid !== 'status@broadcast' &&
-            message.key.fromMe === false &&
-            message.message?.conversation
-          ) {
-            callback({ from: message.key.remoteJid, content: message.message?.conversation });
+          if (message.key.remoteJid !== 'status@broadcast' && !message.key.fromMe && message.message?.conversation) {
+            if (message.key.remoteJid) {
+              callback({ from: message.key.remoteJid, content: message.message?.conversation });
+            }
           }
         });
       }
     });
   }
 
-  onButtonResponse(callback: (message: { from: string; selectedButtonId: string }) => void) {
+  onButtonResponse(callback: (message: { from: string, selectedButtonId: string }) => void): void {
     this.socket.ev.on('messages.upsert', (event) => {
       const messageWithButtons = event.messages.filter((message) => message.message?.buttonsResponseMessage);
       if (event.type === 'notify' && messageWithButtons.length > 0) {
@@ -70,9 +71,9 @@ export class Messenger {
     });
   }
 
-  async init() {
+  async init(): Promise<void> {
     const { state, saveCreds } = await useMultiFileAuthState('baileys_auth_info');
-    const { version, isLatest } = await fetchLatestBaileysVersion();
+    const { version } = await fetchLatestBaileysVersion();
 
     this.socket = makeWASocket({
       version,
@@ -82,7 +83,7 @@ export class Messenger {
     });
 
     this.socket.ev.process(async (event) => {
-      if (event['connection.update']) {
+      if (event['connection.update'] != null) {
         const update = event['connection.update'];
         const { connection, lastDisconnect } = update;
         if (connection === 'close') {
@@ -97,17 +98,17 @@ export class Messenger {
 
         console.log('connection update', update);
       }
-      if (event['creds.update']) {
+      if (event['creds.update'] != null) {
         await saveCreds();
       }
     });
 
     await this.socket.waitForSocketOpen();
 
-    this.initStoreHandler();
+    await this.initStoreHandler();
   }
 
-  async status() {
+  async status(): Promise<{ ok: boolean, blockList: string[] }> {
     const timeout = setTimeout(() => {
       throw new Error('timeout');
     }, 5_000);
@@ -116,7 +117,7 @@ export class Messenger {
     return { ok: true, blockList };
   }
 
-  private async initStoreHandler() {
+  private async initStoreHandler(): Promise<void> {
     this.store = makeInMemoryStore({});
     if (this.storeHandlerInterval) {
       clearInterval(this.storeHandlerInterval);
@@ -130,7 +131,7 @@ export class Messenger {
 
     this.storeHandlerInterval = setInterval(() => {
       const data = JSON.stringify(this.store.toJSON());
-      this.redis.set(STORE_KEY, data);
+      this.redis.set(STORE_KEY, data).catch(console.error);
     }, 10_000);
 
     this.store.bind(this.socket.ev);
