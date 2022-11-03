@@ -43,7 +43,7 @@ export class Messenger {
     return await this.socket.sendMessage(to, buttonMessage);
   }
 
-  onMessage(callback: (message: { from: string, content: string }) => void): void {
+  onMessage(callback: (message: { from: string; content: string }) => void): void {
     this.socket.ev.on('messages.upsert', (event) => {
       if (event.type === 'notify') {
         event.messages.forEach((message) => {
@@ -57,15 +57,17 @@ export class Messenger {
     });
   }
 
-  onButtonResponse(callback: (message: { from: string, selectedButtonId: string }) => void): void {
+  onButtonResponse(callback: (message: { from: string; selectedButtonId: string }) => void): void {
     this.socket.ev.on('messages.upsert', (event) => {
       const messageWithButtons = event.messages.filter((message) => message.message?.buttonsResponseMessage);
       if (event.type === 'notify' && messageWithButtons.length > 0) {
         messageWithButtons.forEach((message) => {
-          callback({
-            from: message.key.remoteJid,
-            selectedButtonId: message.message.buttonsResponseMessage.selectedButtonId,
-          });
+          if (message.key.remoteJid && message.message?.buttonsResponseMessage?.selectedButtonId) {
+            callback({
+              from: message.key.remoteJid,
+              selectedButtonId: message.message.buttonsResponseMessage.selectedButtonId,
+            });
+          }
         });
       }
     });
@@ -108,7 +110,7 @@ export class Messenger {
     await this.initStoreHandler();
   }
 
-  async status(): Promise<{ ok: boolean, blockList: string[] }> {
+  async status(): Promise<{ ok: boolean; blockList: string[] }> {
     const timeout = setTimeout(() => {
       throw new Error('timeout');
     }, 5_000);
