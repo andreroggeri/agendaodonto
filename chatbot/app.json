@@ -1,0 +1,15 @@
+{
+  "name": "Messaging app",
+  "description": "Used to handle messages in Whatsapp",
+  "keywords": ["nodejs"],
+  "repository": "https://github.com/andreroggeri/agendaodonto",
+  "scripts": {
+    "dokku": {}
+  },
+  "addons": ["dokku-redis"],
+  "buildpacks": [
+    {
+      "url": "https://github.com/heroku/heroku-buildpack-nodejs"
+    }
+  ]
+}
