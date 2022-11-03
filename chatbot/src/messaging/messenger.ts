@@ -9,6 +9,7 @@ import { Boom } from '@hapi/boom';
 import { Redis } from 'ioredis';
 import slugify from 'slugify';
 import { WhatsappButton } from '../buttons';
+import { settings } from '../settings';
 
 const STORE_KEY = 'whatsapp_store';
 const retryMap = {};
@@ -74,7 +75,7 @@ export class Messenger {
   }
 
   async init(): Promise<void> {
-    const { state, saveCreds } = await useMultiFileAuthState('baileys_auth_info');
+    const { state, saveCreds } = await useMultiFileAuthState(settings.AUTHENTICATION_PATH);
     const { version } = await fetchLatestBaileysVersion();
 
     this.socket = makeWASocket({
