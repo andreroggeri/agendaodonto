@@ -20,5 +20,5 @@ This is a personal project for managing a dental clinic.
 
 - Patient Registration
 - Schedule Registration
-- SMS Notification using your mobile phone (Thanks to [SMSGateway](https://smsgateway.me/))
+- SMS/Whatsapp Notification using your mobile phone
 - Reports data
