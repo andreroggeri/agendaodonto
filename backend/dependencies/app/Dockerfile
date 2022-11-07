@@ -12,5 +12,6 @@ ENV PYTHONPATH "${PYTHONPATH}:/app/pip-packages"
 ENV PATH "${PATH}:/app/pip-packages/bin"
 
 COPY ./dependencies/app/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN ["chmod", "+x", "/app/docker-entrypoint.sh"]
 
 CMD ["./docker-entrypoint.sh"]
