@@ -18,7 +18,7 @@ from app.schedule.models import Schedule
 from app.schedule.models.clinic import Clinic
 from app.schedule.models.dentist import Dentist
 from app.schedule.models.patient import Patient
-from app.schedule.service.sms import SMS
+from app.schedule.service.notification.sms import SMS
 
 
 class ScheduleAPITest(APITestCase):
@@ -403,7 +403,7 @@ class ScheduleNotificationTest(TestCase):
         with Mocker() as mock:
             mock.post(FCMNotification.FCM_END_POINT, text='{"key": "value"}', status_code=400)
             client = SMS()
-            self.assertFalse(client.send_message(self.future_schedule.id))
+            self.assertFalse(client.send_notification(self.future_schedule.id))
             self.future_schedule.refresh_from_db()
 
 

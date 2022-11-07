@@ -81,7 +81,8 @@ class Command(BaseCommand):
                 message=''
             )
 
-            clinic.dentists = c[2]
+            for d in c[2]:
+                clinic.dentists.add(d)
             clinic.save()
             clinic_list.append(clinic)
 

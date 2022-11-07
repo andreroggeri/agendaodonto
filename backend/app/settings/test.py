@@ -2,7 +2,6 @@ import datetime
 
 import dj_database_url
 
-from app.schedule.service.sms import FakeSMS
 from .default import *
 
 # Database
@@ -39,4 +38,5 @@ CELERY_EAGER_PROPAGATE = True
 CELERY_TASK_MAX_RETRY = 1
 
 FIREBASE_TOKEN = 'A-FAKE-TOKEN'
-MESSAGE_CLASS = FakeSMS
+
+MESSAGE_CLASS = 'app.schedule.service.notification.fake.FakeSMS'

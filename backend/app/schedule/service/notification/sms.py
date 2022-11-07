@@ -4,8 +4,10 @@ from time import sleep
 from django.conf import settings
 from pyfcm import FCMNotification
 
+from app.schedule.service.notification.base import BaseNotificationService
 
-class SMS:
+
+class SMS(BaseNotificationService):
     def __init__(self):
         self.client = FCMNotification(settings.FIREBASE_TOKEN)
 
@@ -26,7 +28,7 @@ class SMS:
 
         return True
 
-    def send_message(self, schedule_id):
+    def send_notification(self, schedule_id):
         from app.schedule.models import Schedule
         schedule = Schedule.objects.get(pk=schedule_id)
         phone = f'+55{schedule.patient.phone}'
@@ -39,11 +41,6 @@ class SMS:
             return True
         except:
             return False
-
-
-class FakeSMS:
-    def send_message(self, schedule):
-        return True
 
 
 class SMSTimeoutError(BaseException):
