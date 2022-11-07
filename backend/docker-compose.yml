@@ -1,57 +1,52 @@
 version: '3'
 services:
 
-  worker:
+  app_worker:
     build:
       context: .
       dockerfile: ./dependencies/Dockerfile-worker
     environment:
-    - DJANGO_SETTINGS_MODULE=app.settings.dev
-    - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-    - DATABASE_URL=postgres://postgres:postgres@db:5432/ao-dev
-    - DJANGO_SECRET_KEY=SOME_KEY
-    env_file:
-    - env.list
+      - DJANGO_SETTINGS_MODULE=app.settings.dev
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/dev_db
+      - DJANGO_SECRET_KEY=SOME_KEY
     depends_on:
-    - db
-    - rabbitmq
+      - db
+      - rabbitmq
 
-  web:
+  app_web:
     build:
       context: .
       dockerfile: dependencies/app/Dockerfile
     environment:
-    - DJANGO_SETTINGS_MODULE=app.settings.dev
-    - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-    - DATABASE_URL=postgres://postgres:postgres@db:5432/ao-dev
-    - DJANGO_SECRET_KEY=SOME_KEY
-    env_file:
-    - env.list
+      - DJANGO_SETTINGS_MODULE=app.settings.dev
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/dev_db
+      - DJANGO_SECRET_KEY=SOME_KEY
     ports:
-    - 8001:8000
+      - "8001:8000"
     depends_on:
-    - db
-    - rabbitmq
+      - db
+      - rabbitmq
     volumes:
       - ./app:/app/app
     restart: always
+
   db:
-    build:
-      context: ./dependencies
-      dockerfile: Dockerfile-db
+    image: postgres:14
     environment:
-    - POSTGRES_DB=ao-dev
-    - POSTGRES_USER=postgres
-    - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=dev_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     volumes:
       - ./dbdata:/var/lib/postgresql/data
     ports:
-    - 5432:5432
+      - 5432:5432
 
   admin:
     image: dpage/pgadmin4
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin
+      - PGADMIN_DEFAULT_EMAIL=a.roggeri.c@gmail.com
       - PGADMIN_DEFAULT_PASSWORD=admin
       - PGADMIN_LISTEN_PORT=5050
     ports:
@@ -60,4 +55,4 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     ports:
-    - 8080:15672
+      - "8080:15672"
