@@ -26,6 +26,7 @@ jobs:
         uses: dokku/github-action@master
         if: steps.changed-files.outputs.any_changed == 'true'
         with:
+          branch: "main"
           git_remote_url: ${{ secrets.DOKKU_STAGING }}
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
           git_push_flags: "--force"
@@ -47,6 +48,7 @@ jobs:
         uses: dokku/github-action@master
         if: steps.changed-files.outputs.any_changed == 'true'
         with:
+          branch: "main"
           git_remote_url: ${{ secrets.DOKKU_MESSAGING }}
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
           git_push_flags: "--force"
