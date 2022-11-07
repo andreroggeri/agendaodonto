@@ -13,10 +13,7 @@ export class ClientContext {
   }
 
   static fromObject(data: ClientContext): ClientContext {
-    return new ClientContext(
-      data.currentFlow as WhatsappChatFlow,
-      data.lastInteraction ? new Date(data.lastInteraction) : new Date(),
-    );
+    return new ClientContext(data.currentFlow, data.lastInteraction ? new Date(data.lastInteraction) : new Date());
   }
 
   setCurrentFlow(flow: WhatsappChatFlow) {

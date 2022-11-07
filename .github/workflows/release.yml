@@ -1,13 +1,12 @@
-name: 'Release the kraken'
+name: "Release the kraken"
 on:
   push:
     branches:
       - main
     paths:
-      - 'backend/**'
-      - 'chatbot/**'
-      - '.github/workflows/release.yml'
-
+      - "backend/**"
+      - "chatbot/**"
+      - ".github/workflows/release.yml"
 
 jobs:
   release-backend-staging:
@@ -20,6 +19,7 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v34
         with:
+          since_last_remote_commit: true
           files: |
             backend/**
       - name: Deploy
@@ -28,8 +28,8 @@ jobs:
         with:
           git_remote_url: ${{ secrets.DOKKU_STAGING }}
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
-          git_push_flags: '--force'
-  
+          git_push_flags: "--force"
+
   release-chatbot:
     runs-on: ubuntu-latest
     steps:
@@ -40,6 +40,7 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v34
         with:
+          since_last_remote_commit: true
           files: |
             chatbot/**
       - name: Deploy
@@ -48,8 +49,7 @@ jobs:
         with:
           git_remote_url: ${{ secrets.DOKKU_MESSAGING }}
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
-          #  git_push_flags: '--force'
-
+          git_push_flags: "--force"
 #  release-front-end-staging:
 #    runs-on: ubuntu-latest
 #    steps:
