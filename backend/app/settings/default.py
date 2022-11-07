@@ -15,8 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import pytz
 
-from app.schedule.service.sms import SMS
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -205,7 +203,7 @@ DJOSER = {
 
 FIREBASE_TOKEN = os.getenv('FIREBASE_TOKEN')
 
-MESSAGE_CLASS = SMS
+MESSAGE_CLASS = os.getenv('MESSAGE_CLASS', 'app.schedule.service.notification.sms.SMS')
 
 MESSAGE_ETA = {'hour': 10, 'minute': 0}
 MESSAGE_EXPIRES = {'hour': 22, 'minute': 30}
@@ -237,3 +235,7 @@ SWAGGER_SETTINGS = {
         }
     }
 }
+
+# Notification Settings
+MESSAGING_URL = os.getenv('MESSAGING_URL', 'http://localhost:8000')
+MESSAGING_API_KEY = os.getenv('MESSAGING_API_KEY')
