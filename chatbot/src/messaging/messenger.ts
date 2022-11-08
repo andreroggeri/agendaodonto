@@ -44,7 +44,7 @@ export class Messenger {
     return await this.socket.sendMessage(to, buttonMessage);
   }
 
-  onMessage(callback: (message: { from: string, content: string }) => void): void {
+  onMessage(callback: (message: { from: string, content: string }) => any): void {
     this.socket.ev.on('messages.upsert', (event) => {
       if (event.type === 'notify') {
         event.messages.forEach((message) => {
@@ -58,7 +58,7 @@ export class Messenger {
     });
   }
 
-  onButtonResponse(callback: (message: { from: string, selectedButtonId: string }) => void): void {
+  onButtonResponse(callback: (message: { from: string, selectedButtonId: string }) => any): void {
     this.socket.ev.on('messages.upsert', (event) => {
       const messageWithButtons = event.messages.filter((message) => message.message?.buttonsResponseMessage);
       if (event.type === 'notify' && messageWithButtons.length > 0) {
@@ -118,6 +118,15 @@ export class Messenger {
     const blockList = await this.socket.fetchBlocklist();
     clearTimeout(timeout);
     return { ok: true, blockList };
+  }
+
+  async phoneHasAccount(jid: string): Promise<boolean> {
+    const status = await this.socket.fetchStatus(jid);
+    if (!status) {
+      return false;
+    }
+
+    return status?.setAt.getFullYear() > 2000;
   }
 
   private async initStoreHandler(): Promise<void> {
