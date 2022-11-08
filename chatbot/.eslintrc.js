@@ -16,7 +16,8 @@ module.exports = {
     semi: 'off',
     'comma-dangle': 'off',
     '@typescript-eslint/comma-dangle': 'off',
-    '@typescript-eslint/strict-boolean-expressions': 'warn',
+    '@typescript-eslint/strict-boolean-expressions': 'off',
     'n/no-callback-literal': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
   },
 };
