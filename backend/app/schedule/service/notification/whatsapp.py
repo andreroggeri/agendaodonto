@@ -16,7 +16,7 @@ class Whatsapp(BaseNotificationService):
         }
 
         response = requests.post(settings.MESSAGING_URL, data=payload, headers={
-            'Authorization': f'Bearer {settings.MESSAGING_TOKEN}',
+            'Authorization': f'Bearer {settings.MESSAGING_API_KEY}',
             'Content-Type': 'application/json'
         })
 
