@@ -11,7 +11,7 @@ class Whatsapp(BaseNotificationService):
         schedule = Schedule.objects.get(pk=schedule_id)
 
         payload = {
-            'phone': f'+55{schedule.patient.phone}',
+            'phone': schedule.patient.phone,
             'message': schedule.get_message(),
         }
 
