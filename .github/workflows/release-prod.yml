@@ -1,15 +1,37 @@
-name: "Release the kraken"
+name: "Release the kraken for real"
 on:
   push:
     branches:
-      - main
+      - release
     paths:
       - "backend/**"
       - "chatbot/**"
       - ".github/workflows/release.yml"
 
 jobs:
-  release-backend-staging:
+  release-chatbot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check changes on chatbot
+        id: changed-files
+        uses: tj-actions/changed-files@v34
+        with:
+          since_last_remote_commit: true
+          files: |
+            chatbot/**
+      - name: Deploy
+        uses: dokku/github-action@master
+        if: steps.changed-files.outputs.any_changed == 'true'
+        with:
+          branch: "main"
+          git_remote_url: ssh://dokku@deploy.agendaodonto.com/messaging
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
+          git_push_flags: "--force"
+
+  release-backend-production:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -27,8 +49,8 @@ jobs:
         if: steps.changed-files.outputs.any_changed == 'true'
         with:
           branch: "main"
-          git_remote_url: ssh://dokku@deploy.agendaodonto.com/backend-staging
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
+          git_remote_url: backend
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
           git_push_flags: "--force"
 #  release-front-end-staging:
 #    runs-on: ubuntu-latest
