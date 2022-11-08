@@ -15,7 +15,7 @@ class Whatsapp(BaseNotificationService):
             'message': schedule.get_message(),
         }
 
-        response = requests.post(settings.MESSAGING_URL, data=payload, headers={
+        response = requests.post(settings.MESSAGING_URL, json=payload, headers={
             'Authorization': f'Bearer {settings.MESSAGING_API_KEY}',
             'Content-Type': 'application/json'
         })
