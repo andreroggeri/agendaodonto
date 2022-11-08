@@ -205,7 +205,7 @@ FIREBASE_TOKEN = os.getenv('FIREBASE_TOKEN')
 
 MESSAGE_CLASS = os.getenv('MESSAGE_CLASS', 'app.schedule.service.notification.sms.SMS')
 
-MESSAGE_ETA = {'hour': 10, 'minute': 0}
+MESSAGE_ETA = {'hour': 9, 'minute': 30}
 MESSAGE_EXPIRES = {'hour': 22, 'minute': 30}
 
 # Celery Settings
