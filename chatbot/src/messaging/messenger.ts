@@ -121,12 +121,9 @@ export class Messenger {
   }
 
   async phoneHasAccount(jid: string): Promise<boolean> {
-    const status = await this.socket.fetchStatus(jid);
-    if (!status) {
-      return false;
-    }
+    const status = await this.socket.onWhatsApp(jid);
 
-    return status?.setAt.getFullYear() > 2000;
+    return status[0].exists;
   }
 
   private async initStoreHandler(): Promise<void> {
