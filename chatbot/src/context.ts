@@ -1,8 +1,10 @@
 import { differenceInHours } from 'date-fns';
+import * as flows from './buttons';
 import { WhatsappChatFlow } from './buttons';
+import { redis } from './redis';
 
-export class ClientContext {
-  constructor(private currentFlow: WhatsappChatFlow, private lastInteraction?: Date) {}
+class ClientContext {
+  constructor(private readonly author: string, private currentFlow: WhatsappChatFlow, private lastInteraction?: Date) {}
 
   get isLastInteractionTooOld(): boolean {
     if (!this.lastInteraction) {
@@ -12,8 +14,12 @@ export class ClientContext {
     return diff;
   }
 
-  static fromObject(data: ClientContext): ClientContext {
-    return new ClientContext(data.currentFlow, data.lastInteraction ? new Date(data.lastInteraction) : new Date());
+  static fromObject(author: string, data: ClientContext): ClientContext {
+    return new ClientContext(
+      author,
+      data.currentFlow,
+      data.lastInteraction ? new Date(data.lastInteraction) : new Date(),
+    );
   }
 
   setCurrentFlow(flow: WhatsappChatFlow) {
@@ -24,4 +30,18 @@ export class ClientContext {
   getCurrentFlow(): WhatsappChatFlow {
     return this.currentFlow;
   }
+
+  async saveContext() {
+    const content = JSON.stringify(this);
+    await redis.set(this.author, content);
+  }
+}
+
+export async function loadContext(messageAuthor: string): Promise<ClientContext> {
+  const data = await redis.get(messageAuthor);
+  if (data) {
+    return ClientContext.fromObject(messageAuthor, JSON.parse(data));
+  }
+
+  return new ClientContext(messageAuthor, flows.initialFlow);
 }

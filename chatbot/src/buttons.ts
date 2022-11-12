@@ -37,7 +37,7 @@ const queryInsuranceSchedulePeriod: WhatsappChatFlow = {
   ],
 };
 
-const finishFlow: WhatsappChatFlow = {
+export const finishFlow: WhatsappChatFlow = {
   message: messages.flowEnded,
   buttons: [],
 };
