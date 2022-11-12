@@ -75,7 +75,7 @@ export class Messenger {
   }
 
   async init(): Promise<void> {
-    const { state, saveCreds } = await useMultiFileAuthState(settings.AUTHENTICATION_PATH);
+    const { state, saveCreds } = await useMultiFileAuthState(settings.authenticationPath);
     const { version } = await fetchLatestBaileysVersion();
 
     this.socket = makeWASocket({
