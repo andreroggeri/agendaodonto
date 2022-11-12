@@ -3,24 +3,10 @@ import { exit } from 'process';
 import slugify from 'slugify';
 import buildApiRouter from './api/router';
 import * as flows from './buttons';
-import { ClientContext } from './context';
+import { loadContext } from './context';
 import { Messenger } from './messaging/messenger';
 import { redis } from './redis';
 import { settings } from './settings';
-
-async function saveContext(messageAuthor: string, context: ClientContext) {
-  const content = JSON.stringify(context);
-  await redis.set(messageAuthor, content);
-}
-
-async function loadContext(messageAuthor: string): Promise<ClientContext> {
-  const data = await redis.get(messageAuthor);
-  if (data) {
-    return ClientContext.fromObject(JSON.parse(data));
-  }
-
-  return new ClientContext(flows.initialFlow);
-}
 
 async function handleMessage(client: Messenger, from: string, content: string) {
   const context = await loadContext(from);
@@ -35,7 +21,7 @@ async function handleMessage(client: Messenger, from: string, content: string) {
     console.log('Last interaction was too old, restarting from the beginning');
     flows.runFlow(flows.initialFlow, client, from);
     context.setCurrentFlow(flows.initialFlow);
-    await saveContext(from, context);
+    await context.saveContext();
   }
 }
 
@@ -56,18 +42,23 @@ async function handleButtonResponse(client: Messenger, from: string, selectedBut
 
   context.setCurrentFlow(nextFlow);
 
-  await saveContext(from, context);
+  await context.saveContext();
 }
 
-(async () => {
-  console.log('Settings => ', settings);
+void (async () => {
+  const safeSecrets = Object.entries(settings.secrets).reduce((acc, [key, value]) => {
+    acc[key] = `${value.substring(0, 2)}*****${value.substring(value.length - 2)}`;
+    return acc;
+  }, {} as Record<string, string>);
+
+  console.log('Settings => ', { ...settings, secrets: safeSecrets });
 
   const messenger = new Messenger(redis);
   await messenger.init();
 
   messenger.onMessage(async ({ from, content }) => {
     console.log('message received', { from, content });
-    if (settings.TEST_MODE && content !== '!ping' && !from.includes('0437')) {
+    if (settings.testMode && content !== '!ping' && !from.includes('4124')) {
       console.info('TEST_MODE enabled, Ignoring message !');
       return;
     }
@@ -79,7 +70,7 @@ async function handleButtonResponse(client: Messenger, from: string, selectedBut
 
   messenger.onButtonResponse(async ({ from, selectedButtonId }) => {
     console.log('button response received', { from, selectedButtonId });
-    if (settings.TEST_MODE && !from.includes('0437')) {
+    if (settings.testMode && !from.includes('4124')) {
       console.info('TEST_MODE enabled, Ignoring message !');
       return;
     }
@@ -104,7 +95,7 @@ async function handleButtonResponse(client: Messenger, from: string, selectedBut
 
   app.use('/v1/', buildApiRouter(messenger));
 
-  app.listen(settings.PORT, () => {
-    console.log(`Chatbot is running on :${settings.PORT}`);
+  app.listen(settings.port, () => {
+    console.log(`Chatbot is running on :${settings.port}`);
   });
 })();

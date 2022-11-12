@@ -14,7 +14,7 @@ export default function authMiddleware(req: Request, res: Response, next: NextFu
     res.status(401).json({ status: 'Unauthorized' });
     return;
   }
-  if (token !== settings.API_KEY) {
+  if (token !== settings.secrets.apiKey) {
     console.warn('Invalid authorization token');
     res.status(401).json({ status: 'Unauthorized' });
     return;
