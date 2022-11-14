@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, date
+from datetime import datetime
 
 from django.conf import settings
 from django.db.models import ForeignKey, DateTimeField, IntegerField, CharField, CASCADE
@@ -7,8 +7,6 @@ from model_utils.models import TimeStampedModel
 from app.schedule.celery import celery_app
 from app.schedule.models.dentist import Dentist
 from app.schedule.models.patient import Patient
-from app.schedule.tasks import send_message
-from app.settings.default import TZ
 
 
 class Schedule(TimeStampedModel):
@@ -69,18 +67,3 @@ class Schedule(TimeStampedModel):
 
     def revoke_notification(self):
         celery_app.control.revoke(self.notification_task_id)
-
-    def create_notification(self):
-        if date.today() > self.date.date():
-            self.notification_status = self.NOTIFICATION_STATUS_CHOICES[3][0]
-        else:
-            start_time = settings.MESSAGE_ETA
-            end_time = settings.MESSAGE_EXPIRES
-            msg_datetime = self.date.astimezone(TZ).replace(**start_time) - timedelta(days=1)
-            msg_expires = msg_datetime.replace(**end_time)
-            message = send_message.apply_async((self.id,), eta=msg_datetime,
-                                               expires=msg_expires)
-            if self.notification_task_id:
-                self.revoke_notification()
-            self.notification_task_id = message.id
-            self.notification_status = self.NOTIFICATION_STATUS_CHOICES[0][0]
