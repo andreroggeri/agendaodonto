@@ -7,9 +7,7 @@ from app.schedule.service.notification.base import BaseNotificationService
 
 class Whatsapp(BaseNotificationService):
 
-    def send_notification(self, schedule_id):
-        schedule = Schedule.objects.get(pk=schedule_id)
-
+    def send_notification(self, schedule: Schedule) -> bool:
         payload = {
             'phone': schedule.patient.phone,
             'message': schedule.get_message(),
