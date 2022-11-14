@@ -3,6 +3,7 @@ import importlib
 from django.conf import settings
 
 from app.schedule.celery import celery_app
+from app.schedule.models import Schedule
 from app.schedule.service.notification.base import BaseNotificationService
 
 
@@ -16,7 +17,13 @@ def load_class_dynamically(class_path):
 @celery_app.task(bind=True)
 def send_message(self, schedule_id):
     try:
+        schedule = Schedule.objects.get(id=schedule_id)
         messenger: BaseNotificationService = load_class_dynamically(settings.MESSAGE_CLASS)()
-        return messenger.send_notification(schedule_id)
+        result = messenger.send_notification(schedule)
+
+        if result:
+            schedule.notification_status = 1  # TODO: use enum
+
+        return result
     except TimeoutError as e:
         self.retry(exc=e, max_retries=settings.CELERY_TASK_MAX_RETRY, countdown=60 * 5)
