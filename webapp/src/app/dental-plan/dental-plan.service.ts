@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { format } from 'date-fns';
 import { Observable } from 'rxjs';
 
-import { IPagedResponse } from '../shared/interceptors/responses';
+import { IPaginatedResponse } from '../shared/interfaces/services/paginated-response';
 import { IDentalPlanResponse } from '../shared/interfaces/services/denta-plan.model';
 import { BaseService } from '../shared/services/base.service';
 import { DentalPlanFilter } from './dental-plan.filter';
@@ -19,9 +19,9 @@ export class DentalPlanService extends BaseService {
         return this.http.get<IDentalPlanResponse>(this.url(['dental-plans', planId]));
     }
 
-    getAll(dentalPlanFilter?: DentalPlanFilter): Observable<IPagedResponse<IDentalPlanResponse>> {
+    getAll(dentalPlanFilter?: DentalPlanFilter): Observable<IPaginatedResponse<IDentalPlanResponse>> {
         const filter = dentalPlanFilter ? dentalPlanFilter : new DentalPlanFilter();
-        return this.http.get<IPagedResponse<IDentalPlanResponse>>(this.url(['dental-plans']), filter.getFilter());
+        return this.http.get<IPaginatedResponse<IDentalPlanResponse>>(this.url(['dental-plans']), filter.getFilter());
     }
 
     create(plan: IDentalPlanResponse) {

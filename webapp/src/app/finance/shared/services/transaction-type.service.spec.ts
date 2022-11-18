@@ -1,7 +1,7 @@
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { configureTestSuite } from 'ng-bullet';
-import { IPagedResponse } from '../../../shared/interceptors/responses';
+import { IPaginatedResponse } from '../../../shared/interfaces/services/paginated-response';
 import { ITransactionTypeResponse } from '../../../shared/interfaces/services/transaction-type-response.model';
 import { BaseService } from '../../../shared/services/base.service';
 import { TransactionTypeDatabase } from '../../../shared/testing/databases/transaction-type.database';
@@ -10,7 +10,7 @@ import { TransactionTypeFilter } from './transaction-type.filter';
 import { TransactionTypeService } from './transaction-type.service';
 
 const response = { id: 1, code: 123123, label: 'Some Label' };
-const pagedResponse: IPagedResponse<ITransactionTypeResponse> = {
+const pagedResponse: IPaginatedResponse<ITransactionTypeResponse> = {
     count: 1,
     results: [response],
 };

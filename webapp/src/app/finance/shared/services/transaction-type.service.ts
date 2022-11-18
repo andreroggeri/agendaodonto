@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { IPagedResponse } from 'src/app/shared/interceptors/responses';
+import { IPaginatedResponse } from 'src/app/shared/interfaces/services/paginated-response';
 import { ITransactionTypeResponse } from 'src/app/shared/interfaces/services/transaction-type-response.model';
 import { BaseService } from 'src/app/shared/services/base.service';
 
@@ -16,11 +16,11 @@ export class TransactionTypeService extends BaseService {
         super();
     }
 
-    getAll(clinicId: number, filter?: TransactionTypeFilter): Observable<IPagedResponse<TransactionTypeDomain>> {
+    getAll(clinicId: number, filter?: TransactionTypeFilter): Observable<IPaginatedResponse<TransactionTypeDomain>> {
         const url = this.url(['finance/transaction-types', clinicId]);
         const params = filter ? filter.getFilter() : new TransactionTypeFilter().getFilter();
 
-        return this.http.get<IPagedResponse<ITransactionTypeResponse>>(url, params).pipe(
+        return this.http.get<IPaginatedResponse<ITransactionTypeResponse>>(url, params).pipe(
             map(response => {
                 return {
                     results: response.results.map(TransactionTypeDomain.fromResponse),

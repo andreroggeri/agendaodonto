@@ -1,22 +1,19 @@
-import * as faker from 'faker/locale/pt_BR';
-
-import { IDentistResponse } from '../../interfaces/services/dentist.model';
-import { BaseDatabase } from './base.database';
+import { randEmail, randFirstName, randLastName } from "@ngneat/falso";
+import { IDentistResponse } from "../../interfaces/services/dentist.model";
+import { BaseDatabase } from "./base.database";
 
 export class DentistDatabase extends BaseDatabase<IDentistResponse> {
-
     get(): IDentistResponse {
-        const cro = Math.floor((Math.random() * 10000) + 1);
+        const cro = Math.floor(Math.random() * 10000 + 1);
         const dentist: IDentistResponse = {
-            id: Math.floor((Math.random() * 100) + 1),
+            id: Math.floor(Math.random() * 100 + 1),
             cro: cro.toString(),
-            cro_state: 'SP',
-            first_name: faker.name.firstName(),
-            last_name: faker.name.lastName(),
-            email: faker.internet.email(),
-            sex: 'M',
+            cro_state: "SP",
+            first_name: randFirstName(),
+            last_name: randLastName(),
+            email: randEmail(),
+            sex: "M",
         };
         return dentist;
     }
-
 }
