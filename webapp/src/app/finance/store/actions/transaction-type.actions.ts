@@ -1,6 +1,6 @@
 import { PageEvent } from '@angular/material';
 import { createAction, props } from '@ngrx/store';
-import { IPagedResponse } from 'src/app/shared/interceptors/responses';
+import { IPaginatedResponse } from 'src/app/shared/interfaces/services/paginated-response';
 import { IClinicResponse } from 'src/app/shared/interfaces/services/clinic.model';
 
 import { TransactionTypeDomain } from '../../shared/models/transaction-type.domain';
@@ -10,7 +10,7 @@ export const loadClinicsSuccess = createAction('[TransactionType] Load Clinics S
 export const loadClinicsError = createAction('[TransactionType] Load Clinics Error');
 export const clinicSelected = createAction('[TransactionType] Clinic Selected', props<{ clinic: IClinicResponse }>());
 export const loadTransactionTypesSuccess = createAction('[TransactionType] Load Transaction Types Success',
-    props<{ transactionTypes: IPagedResponse<TransactionTypeDomain> }>(),
+    props<{ transactionTypes: IPaginatedResponse<TransactionTypeDomain> }>(),
 );
 
 export const loadTransactionTypesError = createAction('[TransactionType] Load Transaction Types Error');
