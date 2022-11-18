@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { format } from 'date-fns';
 import { Observable } from 'rxjs';
 
-import { IPagedResponse } from '../shared/interceptors/responses';
+import { IPaginatedResponse } from '../shared/interfaces/services/paginated-response';
 import { IScheduleResponse } from '../shared/interfaces/services/schedule.model';
 import { BaseService } from '../shared/services/base.service';
 import { ScheduleFilter } from './schedule.filter';
@@ -19,9 +19,9 @@ export class ScheduleService extends BaseService implements IScheduleService {
         return this.http.get<IScheduleResponse>(this.url(['schedules', scheduleId]));
     }
 
-    getAll(scheduleFilter?: ScheduleFilter): Observable<IPagedResponse<IScheduleResponse>> {
+    getAll(scheduleFilter?: ScheduleFilter): Observable<IPaginatedResponse<IScheduleResponse>> {
         const filter = scheduleFilter ? scheduleFilter : new ScheduleFilter();
-        return this.http.get<IPagedResponse<IScheduleResponse>>(this.url(['schedules']), filter.getFilter());
+        return this.http.get<IPaginatedResponse<IScheduleResponse>>(this.url(['schedules']), filter.getFilter());
     }
 
     create(schedule: IScheduleResponse): Observable<any> {

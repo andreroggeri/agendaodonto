@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { ScheduleFilter } from '../schedule/schedule.filter';
-import { IPagedResponse } from '../shared/interceptors/responses';
+import { IPaginatedResponse } from '../shared/interfaces/services/paginated-response';
 import { IPatientResponse } from '../shared/interfaces/services/patient.model';
 import { IScheduleResponse } from '../shared/interfaces/services/schedule.model';
 import { BaseService } from '../shared/services/base.service';
@@ -17,9 +17,9 @@ export class PatientService extends BaseService implements IPatientService {
         super();
     }
 
-    getAll(patientFilter?: PatientFilter): Observable<IPagedResponse<IPatientResponse>> {
+    getAll(patientFilter?: PatientFilter): Observable<IPaginatedResponse<IPatientResponse>> {
         const filter = patientFilter ? patientFilter.getFilter() : new PatientFilter().getFilter();
-        return this.http.get<IPagedResponse<IPatientResponse>>(this.url(['patients']), filter);
+        return this.http.get<IPaginatedResponse<IPatientResponse>>(this.url(['patients']), filter);
     }
 
     get(patientId: number): Observable<IPatientResponse> {
@@ -58,9 +58,9 @@ export class PatientService extends BaseService implements IPatientService {
         return this.http.get(this.url(['patients']), filter.getFilter()).pipe(map((data: any) => data.count));
     }
 
-    getSchedules(patientId: number, scheduleFilter?: ScheduleFilter): Observable<IPagedResponse<IScheduleResponse>> {
+    getSchedules(patientId: number, scheduleFilter?: ScheduleFilter): Observable<IPaginatedResponse<IScheduleResponse>> {
         const filter = scheduleFilter ? scheduleFilter.getFilter() : new ScheduleFilter().getFilter();
-        return this.http.get<IPagedResponse<IScheduleResponse>>(this.url(['patients', patientId, 'schedules']), filter);
+        return this.http.get<IPaginatedResponse<IScheduleResponse>>(this.url(['patients', patientId, 'schedules']), filter);
     }
 }
 
@@ -71,5 +71,5 @@ export interface IPatientService {
     update(patient: IPatientResponse);
     remove(patient: IPatientResponse);
     save(patient: IPatientResponse);
-    getSchedules(patientId: number, scheduleFilter?: ScheduleFilter): Observable<IPagedResponse<IScheduleResponse>>;
+    getSchedules(patientId: number, scheduleFilter?: ScheduleFilter): Observable<IPaginatedResponse<IScheduleResponse>>;
 }
