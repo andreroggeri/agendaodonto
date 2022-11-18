@@ -1,4 +1,4 @@
-import { IPagedResponse } from '../../interceptors/responses';
+import { IPaginatedResponse } from '../../interfaces/services/paginated-response';
 
 export interface IDatabase<T> {
     get(): T;
@@ -8,7 +8,7 @@ export interface IDatabase<T> {
 export abstract class BaseDatabase<T> implements IDatabase<T> {
     abstract get(): T;
 
-    getAsResponse(count: number): IPagedResponse<T> {
+    getAsResponse(count: number): IPaginatedResponse<T> {
         return {
             count,
             results: this.getMany(count),

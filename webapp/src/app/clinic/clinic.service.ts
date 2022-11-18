@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { IPagedResponse } from '../shared/interceptors/responses';
+import { IPaginatedResponse } from '../shared/interfaces/services/paginated-response';
 import { IClinicResponse } from '../shared/interfaces/services/clinic.model';
 import { BaseService } from '../shared/services/base.service';
 import { ClinicFilter } from './clinic.filter';
@@ -23,9 +23,9 @@ export class ClinicService extends BaseService implements IClinicService {
         super();
     }
 
-    getAll(clinicFilter?: ClinicFilter): Observable<IPagedResponse<IClinicResponse>> {
+    getAll(clinicFilter?: ClinicFilter): Observable<IPaginatedResponse<IClinicResponse>> {
         const filter = clinicFilter ? clinicFilter : new ClinicFilter();
-        return this.http.get<IPagedResponse<IClinicResponse>>(this.url(['clinics']), filter.getFilter());
+        return this.http.get<IPaginatedResponse<IClinicResponse>>(this.url(['clinics']), filter.getFilter());
     }
 
     get(clinicId: number): Observable<IClinicResponse> {

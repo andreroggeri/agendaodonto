@@ -11,7 +11,7 @@ import { PatientFilter } from '../patient/patient.filter';
 import { PatientService } from '../patient/patient.service';
 import { ScheduleFilter } from '../schedule/schedule.filter';
 import { ScheduleService } from '../schedule/schedule.service';
-import { IPagedResponse } from '../shared/interceptors/responses';
+import { IPaginatedResponse } from '../shared/interfaces/services/paginated-response';
 import { IPatientResponse } from '../shared/interfaces/services/patient.model';
 import { IScheduleResponse } from '../shared/interfaces/services/schedule.model';
 import { parseAttendanceData } from './dashboard.utils';
@@ -23,9 +23,9 @@ import { parseAttendanceData } from './dashboard.utils';
 })
 export class DashboardComponent implements OnInit {
 
-    pendingSchedules: Observable<IPagedResponse<IScheduleResponse>>;
-    refSchedules: Observable<IPagedResponse<IScheduleResponse>>;
-    patients: Observable<IPagedResponse<IPatientResponse>>;
+    pendingSchedules: Observable<IPaginatedResponse<IScheduleResponse>>;
+    refSchedules: Observable<IPaginatedResponse<IScheduleResponse>>;
+    patients: Observable<IPaginatedResponse<IPatientResponse>>;
     attendance: Observable<any>;
     attendanceRatio: Observable<any>;
     dentalPlanStats: Observable<object>;
