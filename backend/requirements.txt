@@ -18,4 +18,4 @@ whitenoise==5.0.1
 celery==4.2.1
 python-dateutil==2.8.1
 pyfcm==1.4.7
-drf-yasg==1.17.1
+drf-yasg==1.21.4
