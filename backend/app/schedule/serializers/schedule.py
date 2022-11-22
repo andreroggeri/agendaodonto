@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date
 
 from django.conf import settings
 from rest_framework.serializers import ModelSerializer
@@ -10,7 +10,7 @@ from app.schedule.tasks import send_message
 
 
 def create_notification(schedule: Schedule):
-    if schedule.date.today() > schedule.date.date():
+    if date.today() > schedule.date.date():
         schedule.notification_status = 3  # TODO: use enum
     else:
         start_time = settings.MESSAGE_ETA
