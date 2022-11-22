@@ -403,7 +403,7 @@ class ScheduleNotificationTest(TestCase):
         with Mocker() as mock:
             mock.post(FCMNotification.FCM_END_POINT, text='{"key": "value"}', status_code=400)
             client = SMS()
-            self.assertFalse(client.send_notification(self.future_schedule.id))
+            self.assertFalse(client.send_notification(self.future_schedule))
             self.future_schedule.refresh_from_db()
 
 
