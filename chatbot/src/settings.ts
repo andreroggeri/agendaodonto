@@ -5,5 +5,6 @@ export const settings = {
   authenticationPath: process.env.AUTHENTICATION_PATH ?? './baileys_auth_info',
   secrets: {
     apiKey: process.env.API_KEY ?? 'fake-key',
+    googleRecogApiKey: process.env.GOOGLE_RECOG_API_KEY ?? 'fake-key',
   }
 };
