@@ -1,9 +1,10 @@
 import makeWASocket, {
   DisconnectReason,
+  downloadMediaMessage,
   fetchLatestBaileysVersion,
   makeInMemoryStore,
   proto,
-  useMultiFileAuthState,
+  useMultiFileAuthState
 } from '@adiwajshing/baileys';
 import { Boom } from '@hapi/boom';
 import { Redis } from 'ioredis';
@@ -44,7 +45,7 @@ export class Messenger {
     return await this.socket.sendMessage(to, buttonMessage);
   }
 
-  onMessage(callback: (message: { from: string, content: string }) => any): void {
+  onMessage(callback: (message: { from: string; content: string }) => any): void {
     this.socket.ev.on('messages.upsert', (event) => {
       if (event.type === 'notify') {
         event.messages.forEach((message) => {
@@ -58,7 +59,7 @@ export class Messenger {
     });
   }
 
-  onButtonResponse(callback: (message: { from: string, selectedButtonId: string }) => any): void {
+  onButtonResponse(callback: (message: { from: string; selectedButtonId: string }) => any): void {
     this.socket.ev.on('messages.upsert', (event) => {
       const messageWithButtons = event.messages.filter((message) => message.message?.buttonsResponseMessage);
       if (event.type === 'notify' && messageWithButtons.length > 0) {
@@ -70,6 +71,20 @@ export class Messenger {
             });
           }
         });
+      }
+    });
+  }
+
+  onImage(callback: (message: { from: string; image: Buffer }) => any): void {
+    this.socket.ev.on('messages.upsert', async (event) => {
+      if (event.type === 'notify') {
+        const imageMessages = event.messages.filter((message) => message.message?.imageMessage);
+        for (const message of imageMessages) {
+          if (message.key.remoteJid !== 'status@broadcast' && message.key.remoteJid) {
+            const image = (await downloadMediaMessage(message, 'buffer', {})) as Buffer;
+            callback({ from: message.key.remoteJid, image });
+          }
+        }
       }
     });
   }
@@ -111,7 +126,7 @@ export class Messenger {
     await this.initStoreHandler();
   }
 
-  async status(): Promise<{ ok: boolean, blockList: string[] }> {
+  async status(): Promise<{ ok: boolean; blockList: string[] }> {
     const timeout = setTimeout(() => {
       throw new Error('timeout');
     }, 5_000);

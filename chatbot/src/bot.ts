@@ -7,6 +7,7 @@ import { loadContext } from './context';
 import { Messenger } from './messaging/messenger';
 import { redis } from './redis';
 import { settings } from './settings';
+import { vision } from './vision';
 
 async function handleMessage(client: Messenger, from: string, content: string) {
   const context = await loadContext(from);
@@ -45,6 +46,23 @@ async function handleButtonResponse(client: Messenger, from: string, selectedBut
   await context.saveContext();
 }
 
+async function handleImage(client: Messenger, from: string, image: Buffer) {
+  // const context = await loadContext(from);
+
+  // const currenetState = context.getCurrentFlow().state;
+
+  // console.log('Received image', { from, url });
+  const [result] = await vision.textDetection(image);
+  const hasCardNumber = result.fullTextAnnotation?.text?.match(/\d{9}\n/);
+  if (hasCardNumber) {
+    const cardNumber = hasCardNumber[0].trim();
+    console.log({ cardNumber });
+  } else {
+    console.warn('No card number found');
+  }
+  // console.log(hasCardNumber);
+}
+
 void (async () => {
   const safeSecrets = Object.entries(settings.secrets).reduce((acc, [key, value]) => {
     acc[key] = `${value.substring(0, 2)}*****${value.substring(value.length - 2)}`;
@@ -58,7 +76,7 @@ void (async () => {
 
   messenger.onMessage(async ({ from, content }) => {
     console.log('message received', { from, content });
-    if (settings.testMode && content !== '!ping' && !from.includes('4124')) {
+    if (settings.testMode && content !== '!ping' && !from.includes('8371')) {
       console.info('TEST_MODE enabled, Ignoring message !');
       return;
     }
@@ -70,7 +88,7 @@ void (async () => {
 
   messenger.onButtonResponse(async ({ from, selectedButtonId }) => {
     console.log('button response received', { from, selectedButtonId });
-    if (settings.testMode && !from.includes('4124')) {
+    if (settings.testMode && !from.includes('8371')) {
       console.info('TEST_MODE enabled, Ignoring message !');
       return;
     }
@@ -78,6 +96,10 @@ void (async () => {
     await redis.lpush('button_responses', JSON.stringify({ from, content: selectedButtonId }));
 
     await handleButtonResponse(messenger, from, selectedButtonId);
+  });
+
+  messenger.onImage(async ({ from, image }) => {
+    await handleImage(messenger, from, image);
   });
 
   const app = express();

@@ -1,6 +1,11 @@
 import * as messages from './messages';
 import { Messenger } from './messaging/messenger';
 
+enum ConversationState {
+  GatheringImage = 'GatheringImage',
+  Final = 'Final',
+  ButtonFlow = 'ButtonFlow',
+}
 export interface WhatsappButton {
   text: string;
   nextFlow: WhatsappChatFlow;
@@ -9,16 +14,19 @@ export interface WhatsappButton {
 export interface WhatsappChatFlow {
   message: string;
   buttons: WhatsappButton[];
+  state: ConversationState;
 }
 
 const queryInsuranceCard: WhatsappChatFlow = {
   message: messages.queryInsuranceCard,
   buttons: [],
+  state: ConversationState.GatheringImage,
 };
 
 const scheduleSuccesFlow: WhatsappChatFlow = {
   message: messages.scheduleSuccessFlowEnded,
   buttons: [],
+  state: ConversationState.Final,
 };
 
 const querySchedulePeriod: WhatsappChatFlow = {
@@ -27,6 +35,7 @@ const querySchedulePeriod: WhatsappChatFlow = {
     { text: 'Manhã', nextFlow: scheduleSuccesFlow },
     { text: 'Tarde', nextFlow: scheduleSuccesFlow },
   ],
+  state: ConversationState.ButtonFlow,
 };
 
 const queryInsuranceSchedulePeriod: WhatsappChatFlow = {
@@ -35,11 +44,13 @@ const queryInsuranceSchedulePeriod: WhatsappChatFlow = {
     { text: 'Manhã', nextFlow: queryInsuranceCard },
     { text: 'Tarde', nextFlow: queryInsuranceCard },
   ],
+  state: ConversationState.ButtonFlow,
 };
 
 export const finishFlow: WhatsappChatFlow = {
   message: messages.flowEnded,
   buttons: [],
+  state: ConversationState.Final,
 };
 
 const privateScheduleFlow: WhatsappChatFlow = {
@@ -48,11 +59,13 @@ const privateScheduleFlow: WhatsappChatFlow = {
     { text: 'Sim', nextFlow: querySchedulePeriod },
     { text: 'Não', nextFlow: finishFlow },
   ],
+  state: ConversationState.ButtonFlow,
 };
 
 const patientUnderMinimumAge: WhatsappChatFlow = {
   message: messages.patientUnderMinimumRequiredAge,
   buttons: [],
+  state: ConversationState.Final,
 };
 
 const queryPatientAge: WhatsappChatFlow = {
@@ -62,6 +75,7 @@ const queryPatientAge: WhatsappChatFlow = {
     { text: '9 a 18 anos', nextFlow: queryInsuranceSchedulePeriod },
     { text: '18 anos ou mais', nextFlow: queryInsuranceSchedulePeriod },
   ],
+  state: ConversationState.ButtonFlow,
 };
 
 const queryPatientAgeInterodonto: WhatsappChatFlow = {
@@ -71,6 +85,7 @@ const queryPatientAgeInterodonto: WhatsappChatFlow = {
     { text: '11 a 18 anos', nextFlow: queryInsuranceSchedulePeriod },
     { text: '18 anos ou mais', nextFlow: queryInsuranceSchedulePeriod },
   ],
+  state: ConversationState.ButtonFlow,
 };
 
 const dentalPlanFlow: WhatsappChatFlow = {
@@ -79,6 +94,7 @@ const dentalPlanFlow: WhatsappChatFlow = {
     { text: 'Amil Dental', nextFlow: queryPatientAge },
     { text: 'Interodonto', nextFlow: queryPatientAgeInterodonto },
   ],
+  state: ConversationState.ButtonFlow,
 };
 
 const scheduleAppointment: WhatsappChatFlow = {
@@ -87,11 +103,13 @@ const scheduleAppointment: WhatsappChatFlow = {
     { text: 'Particular', nextFlow: privateScheduleFlow },
     { text: 'Convênio odontológico', nextFlow: dentalPlanFlow },
   ],
+  state: ConversationState.ButtonFlow,
 };
 
 const informationFlow: WhatsappChatFlow = {
   message: messages.informationMessage,
   buttons: [{ text: 'Agendamento', nextFlow: scheduleAppointment }],
+  state: ConversationState.ButtonFlow,
 };
 
 export const initialFlow: WhatsappChatFlow = {
@@ -100,6 +118,7 @@ export const initialFlow: WhatsappChatFlow = {
     { text: 'Agendamento', nextFlow: scheduleAppointment },
     { text: 'Informações', nextFlow: informationFlow },
   ],
+  state: ConversationState.ButtonFlow,
 };
 
 export function runFlow(flow: WhatsappChatFlow, client: Messenger, to: string) {
