@@ -9,7 +9,7 @@ on:
       - ".github/workflows/release.yml"
 
 jobs:
-  release-chatbot:
+  release-chatbot-production:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
