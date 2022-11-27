@@ -2,6 +2,7 @@
   "tabWidth": 2,
   "trailingComma": "all",
   "semi": true,
+  "semicolon": [true, "never", "ignore-interfaces"],
   "singleQuote": true,
   "bracketSpacing": true,
   "printWidth": 120
