@@ -19,5 +19,12 @@ module.exports = {
     '@typescript-eslint/strict-boolean-expressions': 'off',
     'n/no-callback-literal': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/member-delimiter-style': 'off',
+    '@typescript-eslint/no-misused-promises': [
+      'error',
+      {
+        checksVoidReturn: false,
+      },
+    ],
   },
 };
