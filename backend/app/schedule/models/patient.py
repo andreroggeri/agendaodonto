@@ -29,3 +29,4 @@ class Patient(TimeStampedModel):
     sex = models.CharField('Sexo', max_length=1, choices=SEX_TYPES)
     clinic = models.ForeignKey(Clinic, on_delete=CASCADE)
     dental_plan = ForeignKey(DentalPlan, default=None, null=True, blank=True, on_delete=CASCADE)
+    # cpf_hash = models.CharField('CPF', max_length=64, default=None, null=True, blank=True)
