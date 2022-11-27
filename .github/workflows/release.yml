@@ -31,14 +31,31 @@ jobs:
           git_remote_url: ssh://dokku@deploy.agendaodonto.com/backend-staging
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
           git_push_flags: "--force"
-  #  release-front-end-staging:
-  #    runs-on: ubuntu-latest
-  #    steps:
-  #      - uses: actions/checkout@v2
+
+  release-chatbot-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check changes on chatbot
+        id: changed-files
+        uses: tj-actions/changed-files@v34
+        with:
+          since_last_remote_commit: true
+          files: |
+            chatbot/**
+      - name: Deploy
+        uses: dokku/github-action@master
+        if: steps.changed-files.outputs.any_changed == 'true'
+        with:
+          branch: "main"
+          git_remote_url: ssh://dokku@deploy.agendaodonto.com/messaging-staging
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
 
   e2e-tests-staging:
     runs-on: ubuntu-latest
-    needs: [release-backend-staging]
+    needs: [release-backend-staging, release-chatbot-staging]
     defaults:
       run:
         working-directory: webapp
@@ -58,15 +75,3 @@ jobs:
         env:
           APP_HOST: "https://staging.agendaodonto.com"
         run: npm run test:e2e
-#
-#  release-front-end-production:
-#    runs-on: ubuntu-latest
-#    needs: [release-backend-staging, release-front-end-staging]
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#  release-backend-production:
-#    runs-on: ubuntu-latest
-#    needs: [ release-backend-staging, release-front-end-staging ]
-#    steps:
-#      - uses: actions/checkout@v2
