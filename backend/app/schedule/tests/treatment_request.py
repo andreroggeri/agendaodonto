@@ -1,14 +1,12 @@
+import datetime
 import json
-from datetime import datetime
-from urllib.parse import urlencode
 
-import pytz
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_200_OK, HTTP_201_CREATED
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from rest_framework.test import APITestCase
 
-from app.schedule.models import Dentist, Clinic, DentalPlan, Schedule, Patient
+from app.schedule.models import Dentist, Clinic, DentalPlan
 from app.schedule.models.treatment_request import TreatmentRequest
 
 
@@ -23,8 +21,6 @@ class TreatmentRequestAPITest(APITestCase):
             time_delta=0
         )
         self.dental_plan = DentalPlan.objects.create(name='Test Plan')
-        # self.patient_1 = Patient.objects.create(name='Blah', clinic=self.clinic)
-        # self.patient_2 = Patient.objects.create(name='Blah', clinic=self.clinic)
         self.authenticate()
 
     def authenticate(self):
@@ -41,92 +37,67 @@ class TreatmentRequestAPITest(APITestCase):
         self.assertEqual(len(json.loads(response.content.decode('utf-8'))), TreatmentRequest.objects.count())
         self.assertEqual(HTTP_200_OK, response.status_code)
 
-    # def test_get_dental_plan(self):
-    #     plan = DentalPlan.objects.create(name='some plan')
-    #     url = reverse('dental-plan-detail', kwargs={"pk": plan.pk})
-    #
-    #     response = self.client.get(url)
-    #
-    #     self.assertEqual(json.loads(response.content.decode('utf-8')).get('name'), DentalPlan.objects.first().name)
-    #     self.assertEqual(HTTP_200_OK, response.status_code)
-    #
-    # def test_create_dental_plan(self):
-    #     url = reverse('dental-plans')
-    #
-    #     body = {
-    #         'name': 'Test Plan'
-    #     }
-    #
-    #     response = self.client.post(url, body)
-    #
-    #     self.assertEqual(Clinic.objects.count(), 1)
-    #     self.assertEqual(HTTP_201_CREATED, response.status_code)
-    #
-    # def test_edit_dental_plan(self):
-    #     plan = DentalPlan.objects.create(name='some plan')
-    #
-    #     url = reverse('dental-plan-detail', kwargs={"pk": plan.pk})
-    #
-    #     body = {
-    #         'name': 'Some Plan'
-    #     }
-    #
-    #     response = self.client.put(url, body)
-    #     plan.refresh_from_db()
-    #     self.assertEqual(HTTP_200_OK, response.status_code)
-    #     self.assertEqual(plan.name, body['name'])
-    #
-    # def test_get_aggregated_data(self):
-    #     plan1 = DentalPlan.objects.create(name='Plan 1')
-    #     plan2 = DentalPlan.objects.create(name='Plan 2')
-    #     self.patient_1.dental_plan = plan1
-    #     self.patient_2.dental_plan = plan2
-    #     self.patient_1.save()
-    #     self.patient_2.save()
-    #
-    #     # Creates schedules for the range filtered
-    #     for _ in range(20):
-    #         Schedule.objects.create(patient=self.patient_1,
-    #                                 date=datetime(2019, 10, 5, 10, 1, tzinfo=pytz.timezone('America/Sao_Paulo')),
-    #                                 duration=1,
-    #                                 dentist=self.dentist)
-    #
-    #     for _ in range(5):
-    #         Schedule.objects.create(patient=self.patient_2,
-    #                                 date=datetime(2019, 10, 15, 20, 15, tzinfo=pytz.timezone('America/Sao_Paulo')),
-    #                                 duration=1,
-    #                                 dentist=self.dentist)
-    #
-    #     # Creates schedules outside the filtered range
-    #     for _ in range(20):
-    #         Schedule.objects.create(patient=self.patient_1,
-    #                                 date=datetime(2019, 9, 5, 7, 1, tzinfo=pytz.timezone('America/Sao_Paulo')),
-    #                                 duration=1,
-    #                                 dentist=self.dentist)
-    #
-    #     params = urlencode({'start_date': '2019-10-01', 'end_date': '2019-10-15'})
-    #     url = reverse('dental-plan-stats') + '?' + params
-    #
-    #     response = self.client.get(url)
-    #     expected_response = [
-    #         {'count': 20, 'dental_plan': 'Plan 1'},
-    #         {'count': 5, 'dental_plan': 'Plan 2'},
-    #     ]
-    #
-    #     self.assertEqual(HTTP_200_OK, response.status_code)
-    #     self.assertListEqual(expected_response, response.json())
-    #
-    # def test_get_aggregated_data_without_date_throws(self):
-    #     url = reverse('dental-plan-stats')
-    #
-    #     response = self.client.get(url)
-    #
-    #     self.assertEqual(HTTP_400_BAD_REQUEST, response.status_code)
-    #
-    # def test_get_aggregated_data_with_invalid_date_throws(self):
-    #     params = urlencode({'start_date': 'some-date', 'end_date': '2019-13-10'})
-    #     url = reverse('dental-plan-stats') + '?' + params
-    #
-    #     response = self.client.get(url)
-    #
-    #     self.assertEqual(HTTP_400_BAD_REQUEST, response.status_code)
+    def test_create_treatment_request(self):
+        url = reverse('treatment-requests')
+
+        body = {
+            'dental_plan': self.dental_plan.pk,
+            'dental_plan_card_number': '1234',
+            'patient_phone': '13245678912',
+            'dentist_phone': self.dentist.phone,
+            'status': 0
+        }
+
+        response = self.client.post(url, body)
+
+        self.assertEqual(HTTP_201_CREATED, response.status_code)
+        self.assertEqual(TreatmentRequest.objects.count(), 1)
+
+    def test_edit_treatment_request(self):
+        treatment_request = TreatmentRequest.objects.create(dental_plan=self.dental_plan,
+                                                            dentist_phone=self.dentist.phone,
+                                                            dental_plan_card_number='1234', patient_phone='13245678912',
+                                                            status=0)
+
+        url = reverse('treatment-request-detail', kwargs={'pk': treatment_request.pk})
+
+        body = {
+            'patient_first_name': 'John the Doe'
+        }
+
+        response = self.client.patch(url, body)
+        treatment_request.refresh_from_db()
+        self.assertEqual(HTTP_200_OK, response.status_code)
+        self.assertEqual(treatment_request.patient_first_name, body['patient_first_name'])
+
+    def test_delete_treatment_request(self):
+        treatment_request = TreatmentRequest.objects.create(dental_plan=self.dental_plan,
+                                                            dentist_phone=self.dentist.phone,
+                                                            dental_plan_card_number='1234', patient_phone='13245678912',
+                                                            status=0)
+
+        url = reverse('treatment-request-detail', kwargs={'pk': treatment_request.pk})
+
+        response = self.client.delete(url)
+        self.assertEqual(HTTP_204_NO_CONTENT, response.status_code)
+        self.assertEqual(TreatmentRequest.objects.count(), 0)
+
+    def test_treatment_request_should_be_updated_with_dental_plan_data(self):
+        url = reverse('treatment-requests')
+
+        body = {
+            'dental_plan': self.dental_plan.pk,
+            'dental_plan_card_number': '1234',
+            'patient_phone': '13245678912',
+            'dentist_phone': self.dentist.phone,
+            'status': 0
+        }
+
+        response = self.client.post(url, body)
+
+        treatment_request = TreatmentRequest.objects.get(pk=json.loads(response.content.decode('utf-8'))['id'])
+
+        self.assertEqual(treatment_request.patient_first_name, 'John')
+        self.assertEqual(treatment_request.patient_last_name, 'Doe')
+        self.assertEqual(treatment_request.patient_birth_date, datetime.date(1990, 1, 1), )
+        self.assertEqual(treatment_request.patient_gender, 'M')
