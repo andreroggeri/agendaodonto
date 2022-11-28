@@ -7,7 +7,7 @@ from app.schedule.views.dental_plan import DentalPlanList, DentalPlanDetail, Den
 from app.schedule.views.dentist import DentistList, DentistDetail
 from app.schedule.views.patient import PatientList, PatientDetail, PatientSchedule
 from app.schedule.views.schedule import ScheduleList, ScheduleDetail, ScheduleAttendance, ScheduleNotification
-from app.schedule.views.treatment_request import TreatmentRequestList
+from app.schedule.views.treatment_request import TreatmentRequestList, TreatmentRequestDetail
 
 urlpatterns = [
     # Schedules
@@ -37,6 +37,6 @@ urlpatterns = [
 
     # Treatment request
     url(r'^treatment-request/$', TreatmentRequestList.as_view(), name='treatment-requests'),
-    url(r'^treatment-request/(?P<pk>[0-9]+)/$', TreatmentRequestList.as_view(), name='treatment-request-detail'),
+    url(r'^treatment-request/(?P<pk>[0-9]+)/$', TreatmentRequestDetail.as_view(), name='treatment-request-detail'),
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)
