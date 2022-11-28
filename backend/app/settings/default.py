@@ -204,6 +204,7 @@ DJOSER = {
 FIREBASE_TOKEN = os.getenv('FIREBASE_TOKEN')
 
 MESSAGE_CLASS = os.getenv('MESSAGE_CLASS', 'app.schedule.service.notification.sms.SMS')
+AMIL_SERVICE = os.getenv('AMIL_SERVICE', 'app.schedule.service.dental_plan.amil.AmilService')
 
 MESSAGE_ETA = {'hour': 9, 'minute': 30}
 MESSAGE_EXPIRES = {'hour': 22, 'minute': 30}

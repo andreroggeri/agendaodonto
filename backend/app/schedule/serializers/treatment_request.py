@@ -9,6 +9,7 @@ class TreatmentRequestSerializer(ModelSerializer):
         model = TreatmentRequest
         fields = ('id',
                   'dental_plan_card_number',
+                  'dental_plan',
                   'patient_phone',
                   'dentist_phone',
                   'status',

@@ -16,7 +16,30 @@ api_base_url = 'https://www.amil.com.br/credenciado-dental/api'
 auth_url = 'https://www.amil.com.br/credenciado-dental/Login'
 
 
-class AmilService:
+class BaseAmilService:
+    def authenticate(self, username: str, password: str) -> None:
+        raise NotImplementedError
+
+    def fetch_dental_plan_data(self, card_number: str) -> AmilDentalPlanInformation:
+        raise NotImplementedError
+
+
+class AmilFakeService(BaseAmilService):
+
+    def authenticate(self, username: str, password: str) -> None:
+        pass
+
+    def fetch_dental_plan_data(self, card_number: str) -> AmilDentalPlanInformation:
+        return {
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'cpf': '12345678910',
+            'birth_date': datetime.date(1990, 1, 1),
+            'gender': 'M',
+        }
+
+
+class AmilService(BaseAmilService):
 
     def __init__(self):
         self.session = requests.Session()
