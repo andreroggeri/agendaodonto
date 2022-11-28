@@ -7,7 +7,7 @@ from django.conf import settings
 from app.schedule.celery import celery_app
 from app.schedule.models import Schedule, Dentist
 from app.schedule.models.treatment_request import TreatmentRequest
-from app.schedule.service.dental_plan.amil import AmilService
+from app.schedule.service.dental_plan.amil import BaseAmilService
 from app.schedule.service.notification.base import BaseNotificationService
 
 
@@ -42,7 +42,7 @@ def fetch_dental_plan_data(self, treatment_request_id):
         treatment_request = TreatmentRequest.objects.get(id=treatment_request_id)
         dentist = Dentist.objects.get(phone__exact=treatment_request.dentist_phone)
 
-        amil = AmilService()
+        amil: BaseAmilService = load_class_dynamically(settings.AMIL_SERVICE)()
         amil.authenticate(dentist.amil_username, dentist.amil_password)
         data = amil.fetch_dental_plan_data(treatment_request.dental_plan_card_number)
 

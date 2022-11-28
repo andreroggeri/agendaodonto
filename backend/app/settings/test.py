@@ -39,3 +39,4 @@ CELERY_TASK_MAX_RETRY = 1
 FIREBASE_TOKEN = 'A-FAKE-TOKEN'
 
 MESSAGE_CLASS = 'app.schedule.service.notification.fake.FakeSMS'
+AMIL_SERVICE = 'app.schedule.service.dental_plan.amil.AmilFakeService'

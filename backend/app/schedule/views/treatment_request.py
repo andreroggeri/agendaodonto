@@ -20,3 +20,4 @@ class TreatmentRequestDetail(RetrieveUpdateDestroyAPIView):
     """
     permission_classes = (permissions.IsAuthenticated,)
     serializer_class = TreatmentRequestSerializer
+    queryset = TreatmentRequest.objects.all()
