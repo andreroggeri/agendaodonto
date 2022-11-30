@@ -2,7 +2,7 @@ import * as express from 'express';
 import { exit } from 'process';
 import slugify from 'slugify';
 import buildApiRouter from './api/router';
-import * as flows from './buttons';
+import { flows, runFlow } from './buttons';
 import { loadContext } from './context';
 import { Messenger } from './messaging/messenger';
 import { redis } from './redis';
@@ -20,9 +20,9 @@ async function handleMessage(client: Messenger, from: string, content: string) {
 
   if (context.isLastInteractionTooOld) {
     console.log('Last interaction was too old, restarting from the beginning');
-    flows.runFlow(flows.initialFlow, client, from);
-    context.setCurrentFlow(flows.initialFlow);
-    await context.saveContext();
+    await runFlow('initialFlow', client, from);
+    context.setCurrentFlow('initialFlow');
+    await context.save();
   }
 }
 
@@ -39,11 +39,13 @@ async function handleButtonResponse(client: Messenger, from: string, selectedBut
 
   const nextFlow = selectedButton.nextFlow;
 
-  flows.runFlow(nextFlow, client, from);
+  // await nextFlow.execute(client, context);
+
+  await runFlow(nextFlow, client, from);
 
   context.setCurrentFlow(nextFlow);
 
-  await context.saveContext();
+  await context.save();
 }
 
 async function handleImage(client: Messenger, from: string, image: Buffer) {
@@ -64,10 +66,10 @@ async function handleImage(client: Messenger, from: string, image: Buffer) {
 }
 
 void (async () => {
-  const safeSecrets = Object.entries(settings.secrets).reduce((acc, [key, value]) => {
+  const safeSecrets = Object.entries(settings.secrets).reduce<Record<string, string>>((acc, [key, value]) => {
     acc[key] = `${value.substring(0, 2)}*****${value.substring(value.length - 2)}`;
     return acc;
-  }, {} as Record<string, string>);
+  }, {});
 
   console.log('Settings => ', { ...settings, secrets: safeSecrets });
 

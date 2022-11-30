@@ -4,7 +4,7 @@
   "description": "Chatbot that handles repeated questions from customers for Whatsapp",
   "main": "index.js",
   "scripts": {
-    "dev": "TEST_MODE=true tsnd -r dotenv/config src/bot.ts",
+    "dev": "tsnd -r dotenv/config src/bot.ts",
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix"
@@ -33,12 +33,14 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "ioredis": "^4.28.0",
+    "object-hash": "^3.0.0",
     "slugify": "^1.6.5"
   },
   "devDependencies": {
     "@types/express": "^4.17.14",
     "@types/ioredis": "^4.27.8",
     "@types/node": "^16.11.6",
+    "@types/object-hash": "^3.0.0",
     "@types/redis": "^2.8.32",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "eslint": "^8.26.0",
