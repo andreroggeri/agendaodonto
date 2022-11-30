@@ -8,124 +8,147 @@ enum ConversationState {
 }
 export interface WhatsappButton {
   text: string;
-  nextFlow: WhatsappChatFlow;
+  nextFlow: FlowName;
 }
 
 export interface WhatsappChatFlow {
   message: string;
   buttons: WhatsappButton[];
   state: ConversationState;
+  execute?: (messenger: Messenger) => Promise<void>;
 }
 
-const queryInsuranceCard: WhatsappChatFlow = {
-  message: messages.queryInsuranceCard,
-  buttons: [],
-  state: ConversationState.GatheringImage,
-};
+export type FlowName =
+  | 'queryInsuranceCard'
+  | 'scheduleSuccesFlow'
+  | 'querySchedulePeriod'
+  | 'finishFlow'
+  | 'privateScheduleFlow'
+  | 'patientUnderMinimumAge'
+  | 'queryPatientAge'
+  | 'queryPatientAgeInterodonto'
+  | 'dentalPlanFlow'
+  | 'scheduleAppointment'
+  | 'informationFlow'
+  | 'initialFlow'
+  | 'queryInsuranceSchedulePeriod';
 
-const scheduleSuccesFlow: WhatsappChatFlow = {
-  message: messages.scheduleSuccessFlowEnded,
-  buttons: [],
-  state: ConversationState.Final,
-};
+function buildFlows(): Record<FlowName, WhatsappChatFlow> {
+  const flows: Partial<Record<FlowName, WhatsappChatFlow>> = {
+    queryInsuranceCard: {
+      message: messages.queryInsuranceCard,
+      buttons: [],
+      state: ConversationState.GatheringImage,
+    },
+    scheduleSuccesFlow: {
+      message: messages.scheduleSuccessFlowEnded,
+      buttons: [],
+      state: ConversationState.Final,
+    },
+    finishFlow: {
+      message: messages.flowEnded,
+      buttons: [],
+      state: ConversationState.Final,
+    },
+  };
 
-const querySchedulePeriod: WhatsappChatFlow = {
-  message: messages.querySchedulePeriod,
-  buttons: [
-    { text: 'Manhã', nextFlow: scheduleSuccesFlow },
-    { text: 'Tarde', nextFlow: scheduleSuccesFlow },
-  ],
-  state: ConversationState.ButtonFlow,
-};
+  flows.querySchedulePeriod = {
+    message: messages.querySchedulePeriod,
+    buttons: [
+      { text: 'Manhã', nextFlow: 'scheduleSuccesFlow' },
+      { text: 'Tarde', nextFlow: 'scheduleSuccesFlow' },
+    ],
+    state: ConversationState.ButtonFlow,
+  };
 
-const queryInsuranceSchedulePeriod: WhatsappChatFlow = {
-  message: messages.querySchedulePeriod,
-  buttons: [
-    { text: 'Manhã', nextFlow: queryInsuranceCard },
-    { text: 'Tarde', nextFlow: queryInsuranceCard },
-  ],
-  state: ConversationState.ButtonFlow,
-};
+  flows.queryInsuranceSchedulePeriod = {
+    message: messages.querySchedulePeriod,
+    buttons: [
+      { text: 'Manhã', nextFlow: 'queryInsuranceCard' },
+      { text: 'Tarde', nextFlow: 'queryInsuranceCard' },
+    ],
+    state: ConversationState.ButtonFlow,
+  };
 
-export const finishFlow: WhatsappChatFlow = {
-  message: messages.flowEnded,
-  buttons: [],
-  state: ConversationState.Final,
-};
+  flows.privateScheduleFlow = {
+    message: messages.privateScheduleInformation,
+    buttons: [
+      { text: 'Sim', nextFlow: 'querySchedulePeriod' },
+      { text: 'Não', nextFlow: 'finishFlow' },
+    ],
+    state: ConversationState.ButtonFlow,
+  };
 
-const privateScheduleFlow: WhatsappChatFlow = {
-  message: messages.privateScheduleInformation,
-  buttons: [
-    { text: 'Sim', nextFlow: querySchedulePeriod },
-    { text: 'Não', nextFlow: finishFlow },
-  ],
-  state: ConversationState.ButtonFlow,
-};
+  flows.patientUnderMinimumAge = {
+    message: messages.patientUnderMinimumRequiredAge,
+    buttons: [],
+    state: ConversationState.Final,
+  };
 
-const patientUnderMinimumAge: WhatsappChatFlow = {
-  message: messages.patientUnderMinimumRequiredAge,
-  buttons: [],
-  state: ConversationState.Final,
-};
+  flows.queryPatientAge = {
+    message: messages.queryPatientAge,
+    buttons: [
+      { text: '0 a 8 anos', nextFlow: 'patientUnderMinimumAge' },
+      { text: '9 a 18 anos', nextFlow: 'queryInsuranceSchedulePeriod' },
+      { text: '18 anos ou mais', nextFlow: 'queryInsuranceSchedulePeriod' },
+    ],
+    state: ConversationState.ButtonFlow,
+  };
 
-const queryPatientAge: WhatsappChatFlow = {
-  message: messages.queryPatientAge,
-  buttons: [
-    { text: '0 a 8 anos', nextFlow: patientUnderMinimumAge },
-    { text: '9 a 18 anos', nextFlow: queryInsuranceSchedulePeriod },
-    { text: '18 anos ou mais', nextFlow: queryInsuranceSchedulePeriod },
-  ],
-  state: ConversationState.ButtonFlow,
-};
+  flows.queryPatientAgeInterodonto = {
+    message: messages.queryPatientAge,
+    buttons: [
+      { text: '0 a 10 anos', nextFlow: 'patientUnderMinimumAge' },
+      { text: '11 a 18 anos', nextFlow: 'queryInsuranceSchedulePeriod' },
+      { text: '18 anos ou mais', nextFlow: 'queryInsuranceSchedulePeriod' },
+    ],
+    state: ConversationState.ButtonFlow,
+  };
 
-const queryPatientAgeInterodonto: WhatsappChatFlow = {
-  message: messages.queryPatientAge,
-  buttons: [
-    { text: '0 a 10 anos', nextFlow: patientUnderMinimumAge },
-    { text: '11 a 18 anos', nextFlow: queryInsuranceSchedulePeriod },
-    { text: '18 anos ou mais', nextFlow: queryInsuranceSchedulePeriod },
-  ],
-  state: ConversationState.ButtonFlow,
-};
+  flows.dentalPlanFlow = {
+    message: messages.queryDentalPlan,
+    buttons: [
+      { text: 'Amil Dental', nextFlow: 'queryPatientAge' },
+      { text: 'Interodonto', nextFlow: 'queryPatientAgeInterodonto' },
+    ],
+    state: ConversationState.ButtonFlow,
+  };
 
-const dentalPlanFlow: WhatsappChatFlow = {
-  message: messages.queryDentalPlan,
-  buttons: [
-    { text: 'Amil Dental', nextFlow: queryPatientAge },
-    { text: 'Interodonto', nextFlow: queryPatientAgeInterodonto },
-  ],
-  state: ConversationState.ButtonFlow,
-};
+  flows.scheduleAppointment = {
+    message: messages.queryTypeOfSchedule,
+    buttons: [
+      { text: 'Particular', nextFlow: 'privateScheduleFlow' },
+      { text: 'Convênio odontológico', nextFlow: 'dentalPlanFlow' },
+    ],
+    state: ConversationState.ButtonFlow,
+  };
 
-const scheduleAppointment: WhatsappChatFlow = {
-  message: messages.queryTypeOfSchedule,
-  buttons: [
-    { text: 'Particular', nextFlow: privateScheduleFlow },
-    { text: 'Convênio odontológico', nextFlow: dentalPlanFlow },
-  ],
-  state: ConversationState.ButtonFlow,
-};
+  flows.informationFlow = {
+    message: messages.informationMessage,
+    buttons: [{ text: 'Agendamento', nextFlow: 'scheduleAppointment' }],
+    state: ConversationState.ButtonFlow,
+  };
 
-const informationFlow: WhatsappChatFlow = {
-  message: messages.informationMessage,
-  buttons: [{ text: 'Agendamento', nextFlow: scheduleAppointment }],
-  state: ConversationState.ButtonFlow,
-};
+  flows.initialFlow = {
+    message: messages.initialGreetingMessage,
+    buttons: [
+      { text: 'Agendamento', nextFlow: 'scheduleAppointment' },
+      { text: 'Informações', nextFlow: 'informationFlow' },
+    ],
+    state: ConversationState.ButtonFlow,
+  };
 
-export const initialFlow: WhatsappChatFlow = {
-  message: messages.initialGreetingMessage,
-  buttons: [
-    { text: 'Agendamento', nextFlow: scheduleAppointment },
-    { text: 'Informações', nextFlow: informationFlow },
-  ],
-  state: ConversationState.ButtonFlow,
-};
+  return flows as Record<FlowName, WhatsappChatFlow>;
+}
 
-export function runFlow(flow: WhatsappChatFlow, client: Messenger, to: string) {
-  console.log('Running flow', flow);
+export const flows = buildFlows();
+
+export async function runFlow(flowName: FlowName, client: Messenger, to: string) {
+  console.log('Running flow', flowName);
+  const flow = flows[flowName];
   if (flow.buttons.length > 0) {
-    client.sendButtons(to, flow.message, flow.buttons);
+    await client.sendButtons(to, flow.message, flow.buttons);
   } else {
-    client.sendMessage(to, flow.message);
+    await client.sendMessage(to, flow.message);
   }
 }

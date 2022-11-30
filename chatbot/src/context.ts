@@ -1,10 +1,20 @@
 import { differenceInHours } from 'date-fns';
-import * as flows from './buttons';
-import { WhatsappChatFlow } from './buttons';
+import { FlowName, flows, WhatsappChatFlow } from './buttons';
 import { redis } from './redis';
 
+interface SavedState {
+  from: string;
+  flowName: string;
+  lastInteraction: number;
+}
+
 class ClientContext {
-  constructor(private readonly author: string, private currentFlow: WhatsappChatFlow, private lastInteraction?: Date) {}
+  constructor(
+    private readonly author: string,
+    private currentFlow: WhatsappChatFlow,
+    private flowName: FlowName,
+    private lastInteraction?: Date,
+  ) {}
 
   get isLastInteractionTooOld(): boolean {
     if (!this.lastInteraction) {
@@ -14,34 +24,38 @@ class ClientContext {
     return diff;
   }
 
-  static fromObject(author: string, data: ClientContext): ClientContext {
-    return new ClientContext(
-      author,
-      data.currentFlow,
-      data.lastInteraction ? new Date(data.lastInteraction) : new Date(),
-    );
+  static fromObject(data: SavedState): ClientContext {
+    const currentFlowKey = (Object.keys(flows).find((k) => k === data.flowName) as FlowName) || 'initialFlow';
+    console.log('Loading context from object', { data, currentFlowKey });
+    const flow = flows[currentFlowKey];
+    return new ClientContext(data.from, flow, currentFlowKey, new Date(data.lastInteraction));
   }
 
-  setCurrentFlow(flow: WhatsappChatFlow) {
+  setCurrentFlow(flow: FlowName) {
     this.lastInteraction = new Date();
-    this.currentFlow = flow;
+    this.currentFlow = flows[flow];
+    this.flowName = flow;
   }
 
   getCurrentFlow(): WhatsappChatFlow {
     return this.currentFlow;
   }
 
-  async saveContext() {
-    const content = JSON.stringify(this);
-    await redis.set(this.author, content);
+  async save() {
+    const data: SavedState = {
+      from: this.author,
+      flowName: this.flowName,
+      lastInteraction: this.lastInteraction?.getTime() ?? 0,
+    };
+    await redis.set(this.author, JSON.stringify(data));
   }
 }
 
 export async function loadContext(messageAuthor: string): Promise<ClientContext> {
   const data = await redis.get(messageAuthor);
   if (data) {
-    return ClientContext.fromObject(messageAuthor, JSON.parse(data));
+    return ClientContext.fromObject(JSON.parse(data));
   }
 
-  return new ClientContext(messageAuthor, flows.initialFlow);
+  return new ClientContext(messageAuthor, flows.initialFlow, 'initialFlow');
 }
