@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import * as flows from '../buttons';
 import { loadContext } from '../context';
 import { Messenger } from '../messaging/messenger';
 
@@ -18,7 +17,7 @@ export async function handleMessageRequest(req: Request, res: Response, messenge
   await messenger.sendMessage(jid, message);
 
   const context = await loadContext(jid);
-  context.setCurrentFlow(flows.finishFlow);
-  await context.saveContext();
+  context.setCurrentFlow('finishFlow');
+  await context.save();
   return res.status(200).json({ sent: true });
 }
