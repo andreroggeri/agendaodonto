@@ -1,5 +1,5 @@
 import { registerLocaleData } from '@angular/common';
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import localePtExtras from '@angular/common/locales/extra/pt';
 import localePt from '@angular/common/locales/pt';
 import { LOCALE_ID, NgModule } from '@angular/core';
@@ -11,6 +11,10 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { NgxMaskModule } from 'ngx-mask';
+import {
+    TreatmentRequestModule,
+    treatmentRequestRoutes,
+} from 'src/app/treatment-request/treatment-request.module';
 import { environment } from 'src/environments/environment';
 
 import { AboutModule, aboutRoutes } from './about/about.module';
@@ -18,7 +22,10 @@ import { AccountModule, accountRoutes } from './account/account.module';
 import { AppComponent } from './app.component';
 import { ClinicModule, clinicRoutes } from './clinic/clinic.module';
 import { DashboardModule, dashboardRoutes } from './dashboard/dashboard.module';
-import { DentalPlanModule, dentalPlanRoutes } from './dental-plan/dental-plan.module';
+import {
+    DentalPlanModule,
+    dentalPlanRoutes,
+} from './dental-plan/dental-plan.module';
 import { FinanceModule } from './finance/finance.module';
 import { LoginModule, loginRoutes } from './login/login.module';
 import { PatientModule, patientRoutes } from './patient/patient.module';
@@ -41,12 +48,11 @@ export const routes: Routes = [
     ...aboutRoutes,
     ...accountRoutes,
     ...dentalPlanRoutes,
+    ...treatmentRequestRoutes,
 ];
 
 @NgModule({
-    declarations: [
-        AppComponent,
-    ],
+    declarations: [AppComponent],
     imports: [
         BrowserModule,
         FormsModule,
@@ -58,7 +64,10 @@ export const routes: Routes = [
         NgxMaskModule.forRoot(),
         StoreModule.forRoot({}, {}),
         EffectsModule.forRoot([]),
-        StoreDevtoolsModule.instrument({ maxAge: 25, logOnly: !environment.production }),
+        StoreDevtoolsModule.instrument({
+            maxAge: 25,
+            logOnly: !environment.production,
+        }),
         // App Modules
         DashboardModule,
         RegisterModule,
@@ -70,6 +79,7 @@ export const routes: Routes = [
         AccountModule,
         DentalPlanModule,
         FinanceModule,
+        TreatmentRequestModule,
     ],
     providers: [
         TokenService,
@@ -79,5 +89,4 @@ export const routes: Routes = [
     ],
     bootstrap: [AppComponent],
 })
-export class AppModule {
-}
+export class AppModule {}
