@@ -4,8 +4,10 @@
     "scripts": {
         "ng": "ng",
         "start": "ng serve",
-        "build": "ng build",
+        "build:staging": "ng b -c=staging --aot",
+        "build:prod": "ng build",
         "test": "ng test",
+        "test:ci": "ng test --code-coverage=true --watch=false --browsers=ChromeHeadlessCI",
         "lint": "ng lint",
         "test:e2e": "playwright test -c e2e"
     },
