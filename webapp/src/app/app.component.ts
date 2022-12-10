@@ -29,24 +29,64 @@ export class AppComponent implements OnInit {
     @ViewChild('sidenav', { static: true }) sideNav: MatSidenav;
     displayType: Display = 'desktop';
     sideNavMenus: IMenu[] = [
-        { name: 'Dashboard', link: '/dashboard', requiresLogin: true, hideWhenLogged: false },
-        { name: 'Clinicas', link: '/clinicas', requiresLogin: true, hideWhenLogged: false },
-        { name: 'Planos', link: '/planos', requiresLogin: true, hideWhenLogged: false },
-        { name: 'Pacientes', link: '/pacientes', requiresLogin: true, hideWhenLogged: false },
         {
-            name: 'Financeiro', requiresLogin: true, hideWhenLogged: false, submenus: [
-                { name: 'Tipos de Despesas', link: '/tipo-transacao' },
-            ],
+            name: 'Dashboard',
+            link: '/dashboard',
+            requiresLogin: true,
+            hideWhenLogged: false,
         },
-        { name: 'Agenda', link: '/agenda', requiresLogin: true, hideWhenLogged: false },
-        { name: 'Login', link: '/login', requiresLogin: false, hideWhenLogged: true },
-        { name: 'Sobre', link: '/sobre', requiresLogin: false, hideWhenLogged: false },
+        {
+            name: 'Clinicas',
+            link: '/clinicas',
+            requiresLogin: true,
+            hideWhenLogged: false,
+        },
+        {
+            name: 'Planos',
+            link: '/planos',
+            requiresLogin: true,
+            hideWhenLogged: false,
+        },
+        {
+            name: 'Pacientes',
+            link: '/pacientes',
+            requiresLogin: true,
+            hideWhenLogged: false,
+        },
+        {
+            name: 'Financeiro',
+            requiresLogin: true,
+            hideWhenLogged: false,
+            submenus: [{ name: 'Tipos de Despesas', link: '/tipo-transacao' }],
+        },
+        {
+            name: 'Agenda',
+            link: '/agenda',
+            requiresLogin: true,
+            hideWhenLogged: false,
+        },
+        {
+            name: 'Solicitações de tratamento',
+            link: '/solicitacao-tratamento',
+            requiresLogin: true,
+            hideWhenLogged: false,
+        },
+        {
+            name: 'Login',
+            link: '/login',
+            requiresLogin: false,
+            hideWhenLogged: true,
+        },
+        {
+            name: 'Sobre',
+            link: '/sobre',
+            requiresLogin: false,
+            hideWhenLogged: false,
+        },
         // { name: 'Minha Conta', link: '/conta', requiresLogin: true, hideWhenLogged: false },
     ];
 
-    constructor(public loginService: LoginService, private router: Router) {
-
-    }
+    constructor(public loginService: LoginService, private router: Router) {}
 
     ngOnInit() {
         window.dispatchEvent(new Event('resize'));
