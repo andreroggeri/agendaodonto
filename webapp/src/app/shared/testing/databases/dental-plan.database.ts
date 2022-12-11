@@ -1,6 +1,6 @@
-import { randFirstName } from "@ngneat/falso";
-import { IDentalPlanResponse } from "../../interfaces/services/denta-plan.model";
-import { BaseDatabase } from "./base.database";
+import { randFirstName } from '@ngneat/falso';
+import { IDentalPlanResponse } from '../../interfaces/services/denta-plan.model';
+import { BaseDatabase } from './base.database';
 
 export class DentalPlanDatabase extends BaseDatabase<IDentalPlanResponse> {
     get(): IDentalPlanResponse {
