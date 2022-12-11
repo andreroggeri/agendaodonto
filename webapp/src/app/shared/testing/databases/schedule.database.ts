@@ -1,8 +1,8 @@
-import { randSoonDate } from "@ngneat/falso";
-import { IScheduleResponse } from "../../interfaces/services/schedule.model";
-import { BaseDatabase } from "./base.database";
-import { DentistDatabase } from "./dentist.database";
-import { PatientDatabase } from "./patient.database";
+import { randSoonDate } from '@ngneat/falso';
+import { IScheduleResponse } from '../../interfaces/services/schedule.model';
+import { BaseDatabase } from './base.database';
+import { DentistDatabase } from './dentist.database';
+import { PatientDatabase } from './patient.database';
 
 export class ScheduleDatabase extends BaseDatabase<IScheduleResponse> {
     patientDatabase = new PatientDatabase();
@@ -16,7 +16,7 @@ export class ScheduleDatabase extends BaseDatabase<IScheduleResponse> {
             duration: Math.floor(Math.random() * 100 + 1),
             status: Math.floor(Math.random() * 3 + 1),
             date: randSoonDate().toString(),
-            notification_status: "ENVIADO",
+            notification_status: 'ENVIADO',
         };
         return schedule;
     }
