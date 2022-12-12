@@ -1,6 +1,6 @@
 import { HttpParams } from '@angular/common/http';
 import { IFilterField } from './base.service';
-export abstract class BaseFilter {
+export class BaseFilter {
     fields: IFilterField[] = [
         { name: 'offset', mapsTo: 'offset', value: '0', type: 'other' },
         { name: 'pageSize', mapsTo: 'limit', value: '10', type: 'other' },
@@ -9,7 +9,9 @@ export abstract class BaseFilter {
     setFilterValue(filterName: string, value: string, clearPrevious = false) {
         const filterIndex = this.fields.findIndex((e) => e.name === filterName);
         if (clearPrevious) {
-            this.fields.filter((field) => field.type === 'filter').map((field) => field.value = null);
+            this.fields
+                .filter((field) => field.type === 'filter')
+                .map((field) => (field.value = null));
         }
         if (filterIndex === -1) {
             console.error('You are setting a unexisting field:', filterName);
@@ -43,6 +45,6 @@ export abstract class BaseFilter {
     reset() {
         this.fields
             .filter((field) => field.type === 'filter')
-            .forEach((field) => field.value = '');
+            .forEach((field) => (field.value = ''));
     }
 }
