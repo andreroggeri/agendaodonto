@@ -15,7 +15,7 @@ import TreatmentRequestStateService, {
 
 import { TreatmentRequestComponent } from './treatment-request.component';
 
-fdescribe('TreatmentRequestComponent', () => {
+describe('TreatmentRequestComponent', () => {
     let component: TreatmentRequestComponent;
     let fixture: ComponentFixture<TreatmentRequestComponent>;
     let state: Mock<TreatmentRequestStateService>;
@@ -62,13 +62,13 @@ fdescribe('TreatmentRequestComponent', () => {
         fixture.detectChanges();
 
         const table = fixture.debugElement.query(By.css('table'));
-        expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
+        expect(fixture.debugElement.query(By.css(':not(table) mat-progress-bar'))).toBeFalsy();
         expect(table).toBeTruthy();
         expect(table.nativeElement.textContent).toContain(
-            treatmentRequest.patient_first_name
+            treatmentRequest.patient_first_name,
         );
         expect(table.nativeElement.textContent).toContain(
-            treatmentRequest.patient_last_name
+            treatmentRequest.patient_last_name,
         );
         expect(table.nativeElement.querySelectorAll('tbody tr').length).toBe(1);
         expect(state.fetchTreatmentRequests).toHaveBeenCalled();
@@ -81,13 +81,13 @@ fdescribe('TreatmentRequestComponent', () => {
         });
         fixture.detectChanges();
         const errorComponent = fixture.debugElement.query(
-            By.css('app-empty-state')
+            By.css('app-empty-state'),
         );
-        expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
+        expect(fixture.debugElement.query(By.css('mat-progress-bar'))).toBeFalsy();
         expect(fixture.debugElement.query(By.css('table'))).toBeFalsy();
         expect(errorComponent).toBeTruthy();
         expect(errorComponent.nativeElement.textContent).toContain(
-            'Ocorreu um erro ao recuperar os dados'
+            'Ocorreu um erro ao recuperar os dados',
         );
     });
 
@@ -101,13 +101,13 @@ fdescribe('TreatmentRequestComponent', () => {
         fixture.detectChanges();
 
         const emptyState = fixture.debugElement.query(
-            By.css('app-empty-state')
+            By.css('app-empty-state'),
         );
-        expect(fixture.debugElement.query(By.css('mat-spinner'))).toBeFalsy();
+        expect(fixture.debugElement.query(By.css('mat-progress-bar'))).toBeFalsy();
         expect(fixture.debugElement.query(By.css('table'))).toBeFalsy();
         expect(emptyState).toBeTruthy();
         expect(emptyState.nativeElement.textContent).toContain(
-            'Você ainda não tem solicitações de tratamentos.'
+            'Você ainda não tem solicitações de tratamentos.',
         );
     });
 
@@ -118,11 +118,11 @@ fdescribe('TreatmentRequestComponent', () => {
         });
         fixture.detectChanges();
         expect(
-            fixture.debugElement.query(By.css('mat-progress-bar'))
+            fixture.debugElement.query(By.css('mat-progress-bar')),
         ).toBeTruthy();
         expect(fixture.debugElement.query(By.css('table'))).toBeFalsy();
         expect(
-            fixture.debugElement.query(By.css('app-empty-state'))
+            fixture.debugElement.query(By.css('app-empty-state')),
         ).toBeFalsy();
     });
 });

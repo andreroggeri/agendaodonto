@@ -8,41 +8,38 @@ import {
     ITreatmentRequestResponse,
     TreatmentRequestStatus,
 } from 'src/app/shared/interfaces/services/treatment-request.response';
-import {
-    TreatmentRequestFilter,
-    TreatmentRequestService,
-} from 'src/app/treatment-request/service/treatment-request.service';
+import { BaseFilter } from 'src/app/shared/services/base.filter';
+import { TreatmentRequestService } from 'src/app/treatment-request/service/treatment-request.service';
 
-export interface TreatmentRequestRow {
+export interface ITreatmentRequestRow {
     loading: boolean;
     data: ITreatmentRequestResponse;
 }
-interface TreatmentRequestState {
+interface ITreatmentRequestState {
     loading: boolean;
     error: boolean;
-    treatmentRequests: TreatmentRequestRow[];
+    treatmentRequests: ITreatmentRequestRow[];
     count: number;
 }
 
 export const initialState = {
     loading: false,
     error: false,
-    treatmentRequests: [] as TreatmentRequestRow[],
+    treatmentRequests: [] as ITreatmentRequestRow[],
     count: 0,
 };
 
 function observe<T>(
     state: Observable<T>,
-    prop: keyof T
+    prop: keyof T,
 ): Observable<T[keyof T]> {
     return state.pipe(map((s) => s[prop]));
 }
 
 @Injectable()
 export default class TreatmentRequestStateService {
-    private state: BehaviorSubject<TreatmentRequestState> = new BehaviorSubject(
-        initialState
-    );
+    private state: BehaviorSubject<ITreatmentRequestState> =
+        new BehaviorSubject(initialState);
 
     state$ = this.state.pipe();
 
@@ -52,7 +49,7 @@ export default class TreatmentRequestStateService {
 
     constructor(
         private service: TreatmentRequestService,
-        private patientService: PatientService
+        private patientService: PatientService,
     ) {
         this.state$.pipe().subscribe((state) => console.log(state));
     }
@@ -61,7 +58,7 @@ export default class TreatmentRequestStateService {
         return this.state.pipe();
     }
 
-    fetchTreatmentRequests(filter?: TreatmentRequestFilter) {
+    fetchTreatmentRequests(filter?: BaseFilter) {
         this.state.next({
             ...this.current,
             loading: true,
@@ -80,7 +77,7 @@ export default class TreatmentRequestStateService {
                         results: [] as ITreatmentRequestResponse[],
                         count: 0,
                     });
-                })
+                }),
             )
             .subscribe((response) => {
                 this.state.next({
@@ -98,11 +95,11 @@ export default class TreatmentRequestStateService {
     }
 
     updateTreatmentRequest(
-        row: TreatmentRequestRow,
-        status: TreatmentRequestStatus
+        row: ITreatmentRequestRow,
+        status: TreatmentRequestStatus,
     ) {
         const foundIdx = this.current.treatmentRequests.findIndex(
-            (r) => r === row
+            (r) => r === row,
         );
 
         if (foundIdx < 0) {
@@ -130,10 +127,9 @@ export default class TreatmentRequestStateService {
             .pipe(
                 catchError(() => {
                     return of(row.data);
-                })
+                }),
             )
             .subscribe((response) => {
-                const updated = [...this.current.treatmentRequests];
                 updated[foundIdx] = {
                     loading: false,
                     data: response,
@@ -145,9 +141,9 @@ export default class TreatmentRequestStateService {
             });
     }
 
-    createPatientFromTreatmentRequest(row: TreatmentRequestRow) {
+    createPatientFromTreatmentRequest(row: ITreatmentRequestRow) {
         const foundIdx = this.current.treatmentRequests.findIndex(
-            (r) => r === row
+            (r) => r === row,
         );
         if (foundIdx < 0) {
             return;
@@ -182,7 +178,7 @@ export default class TreatmentRequestStateService {
             (_) => {
                 this.updateTreatmentRequest(
                     this.current.treatmentRequests[foundIdx],
-                    TreatmentRequestStatus.READY
+                    TreatmentRequestStatus.READY,
                 );
             },
             (err) => {
@@ -194,13 +190,13 @@ export default class TreatmentRequestStateService {
                     ...this.current,
                     treatmentRequests: [...updated],
                 });
-            }
+            },
         );
     }
 
     paginate(event: PageEvent) {
         const offset = event.pageIndex * event.pageSize;
-        const filter = new TreatmentRequestFilter();
+        const filter = new BaseFilter();
         filter.setFilterValue('pageSize', event.pageSize.toString());
         filter.setFilterValue('offset', offset.toString());
 
