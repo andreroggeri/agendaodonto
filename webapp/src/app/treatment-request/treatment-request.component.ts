@@ -7,7 +7,7 @@ import {
     TreatmentRequestStatus,
 } from 'src/app/shared/interfaces/services/treatment-request.response';
 import TreatmentRequestStateService, {
-    TreatmentRequestRow,
+    ITreatmentRequestRow,
 } from 'src/app/treatment-request/service/treatment-request.state';
 
 @Component({
@@ -38,8 +38,8 @@ export class TreatmentRequestComponent implements OnInit {
                 (state) =>
                     state.treatmentRequests.length === 0 &&
                     !state.loading &&
-                    !state.error
-            )
+                    !state.error,
+            ),
         );
 
     paginateSubscription: Subscription;
@@ -53,7 +53,7 @@ export class TreatmentRequestComponent implements OnInit {
             this.paginateSubscription = paginator.page.subscribe(
                 (pageEvent: PageEvent) => {
                     this.state.paginate(pageEvent);
-                }
+                },
             );
         }
     }
@@ -62,18 +62,18 @@ export class TreatmentRequestComponent implements OnInit {
         this.state.fetchTreatmentRequests();
     }
 
-    cancelRequest(row: TreatmentRequestRow) {
+    cancelRequest(row: ITreatmentRequestRow) {
         this.state.updateTreatmentRequest(row, TreatmentRequestStatus.CANCELED);
     }
 
-    createNewPatient(row: TreatmentRequestRow) {
+    createNewPatient(row: ITreatmentRequestRow) {
         this.state.createPatientFromTreatmentRequest(row);
     }
 
     mergePatient(treatmentRequest: ITreatmentRequestResponse) {}
 
-    buttonStateForStatus(action: string, row: TreatmentRequestRow): boolean {
-        const map: Record<TreatmentRequestStatus, string[]> = {
+    buttonStateForStatus(action: string, row: ITreatmentRequestRow): boolean {
+        const statusMap: Record<TreatmentRequestStatus, string[]> = {
             [TreatmentRequestStatus.PENDING]: ['cancel'],
             [TreatmentRequestStatus.DATA_FETCHED_NEW_PATIENT]: [
                 'cancel',
@@ -89,6 +89,6 @@ export class TreatmentRequestComponent implements OnInit {
             [TreatmentRequestStatus.CANCELED]: [],
             [TreatmentRequestStatus.REQUESTED]: [],
         };
-        return row.loading || !map[row.data.status].includes(action);
+        return row.loading || !statusMap[row.data.status].includes(action);
     }
 }
