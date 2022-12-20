@@ -7,7 +7,7 @@ import { SharedComponentsModule } from 'src/app/shared/components/shared-compone
 import { DirectivesModule } from 'src/app/shared/directives/directives.module';
 import { MaterialAppModule } from 'src/app/shared/material.app.module';
 import { TreatmentRequestService } from 'src/app/treatment-request/service/treatment-request.service';
-import TreatmentRequestStateService from 'src/app/treatment-request/service/treatment-request.state';
+import { TreatmentRequestStateService } from 'src/app/treatment-request/service/treatment-request.state';
 import { TreatmentRequestComponent } from './treatment-request.component';
 
 export const treatmentRequestRoutes: Routes = [
