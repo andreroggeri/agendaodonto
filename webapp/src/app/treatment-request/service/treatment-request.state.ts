@@ -37,7 +37,7 @@ function observe<T>(
 }
 
 @Injectable()
-export default class TreatmentRequestStateService {
+export class TreatmentRequestStateService {
     private state: BehaviorSubject<ITreatmentRequestState> =
         new BehaviorSubject(initialState);
 
