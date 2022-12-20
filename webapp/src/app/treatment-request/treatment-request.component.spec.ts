@@ -9,7 +9,8 @@ import { SharedComponentsModule } from 'src/app/shared/components/shared-compone
 import { MaterialAppModule } from 'src/app/shared/material.app.module';
 import { TreatmentRequestDatabase } from 'src/app/shared/testing/databases/treatment-request.database';
 import { provideMock } from 'src/app/shared/testing/provide-mock';
-import TreatmentRequestStateService, {
+import {
+    TreatmentRequestStateService,
     initialState,
 } from 'src/app/treatment-request/service/treatment-request.state';
 
@@ -62,7 +63,9 @@ describe('TreatmentRequestComponent', () => {
         fixture.detectChanges();
 
         const table = fixture.debugElement.query(By.css('table'));
-        expect(fixture.debugElement.query(By.css(':not(table) mat-progress-bar'))).toBeFalsy();
+        expect(
+            fixture.debugElement.query(By.css(':not(table) mat-progress-bar')),
+        ).toBeFalsy();
         expect(table).toBeTruthy();
         expect(table.nativeElement.textContent).toContain(
             treatmentRequest.patient_first_name,
@@ -83,7 +86,9 @@ describe('TreatmentRequestComponent', () => {
         const errorComponent = fixture.debugElement.query(
             By.css('app-empty-state'),
         );
-        expect(fixture.debugElement.query(By.css('mat-progress-bar'))).toBeFalsy();
+        expect(
+            fixture.debugElement.query(By.css('mat-progress-bar')),
+        ).toBeFalsy();
         expect(fixture.debugElement.query(By.css('table'))).toBeFalsy();
         expect(errorComponent).toBeTruthy();
         expect(errorComponent.nativeElement.textContent).toContain(
@@ -103,7 +108,9 @@ describe('TreatmentRequestComponent', () => {
         const emptyState = fixture.debugElement.query(
             By.css('app-empty-state'),
         );
-        expect(fixture.debugElement.query(By.css('mat-progress-bar'))).toBeFalsy();
+        expect(
+            fixture.debugElement.query(By.css('mat-progress-bar')),
+        ).toBeFalsy();
         expect(fixture.debugElement.query(By.css('table'))).toBeFalsy();
         expect(emptyState).toBeTruthy();
         expect(emptyState.nativeElement.textContent).toContain(
