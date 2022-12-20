@@ -6,7 +6,8 @@ import {
     ITreatmentRequestResponse,
     TreatmentRequestStatus,
 } from 'src/app/shared/interfaces/services/treatment-request.response';
-import TreatmentRequestStateService, {
+import {
+    TreatmentRequestStateService,
     ITreatmentRequestRow,
 } from 'src/app/treatment-request/service/treatment-request.state';
 
