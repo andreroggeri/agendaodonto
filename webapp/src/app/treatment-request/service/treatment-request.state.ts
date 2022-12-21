@@ -50,9 +50,7 @@ export class TreatmentRequestStateService {
     constructor(
         private service: TreatmentRequestService,
         private patientService: PatientService,
-    ) {
-        this.state$.pipe().subscribe((state) => console.log(state));
-    }
+    ) {}
 
     getState() {
         return this.state.pipe();
@@ -175,6 +173,49 @@ export class TreatmentRequestStateService {
             dental_plan_card_number: row.data.dental_plan_card_number,
         };
         this.patientService.create(patient).subscribe(
+            (_) => {
+                this.updateTreatmentRequest(
+                    this.current.treatmentRequests[foundIdx],
+                    TreatmentRequestStatus.READY,
+                );
+            },
+            (err) => {
+                updated[foundIdx] = {
+                    ...row,
+                    loading: false,
+                };
+                this.state.next({
+                    ...this.current,
+                    treatmentRequests: [...updated],
+                });
+            },
+        );
+    }
+
+    mergePatient(row: ITreatmentRequestRow, patient: IPatientResponse) {
+        const foundIdx = this.current.treatmentRequests.findIndex(
+            (r) => r === row,
+        );
+        if (foundIdx < 0) {
+            return;
+        }
+        const updated = [...this.current.treatmentRequests];
+        updated[foundIdx] = {
+            ...row,
+            loading: true,
+        };
+        this.state.next({
+            ...this.current,
+            treatmentRequests: [...updated],
+        });
+        const updatedPatient = {
+            ...patient,
+            name: row.data.patient_first_name,
+            last_name: row.data.patient_last_name,
+            phone: row.data.patient_phone,
+            dental_plan_card_number: row.data.dental_plan_card_number,
+        };
+        this.patientService.update(updatedPatient).subscribe(
             (_) => {
                 this.updateTreatmentRequest(
                     this.current.treatmentRequests[foundIdx],
