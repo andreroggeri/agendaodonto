@@ -11,8 +11,9 @@ import { TreatmentRequestDatabase } from 'src/app/shared/testing/databases/treat
 import { provideMock } from 'src/app/shared/testing/provide-mock';
 import { TreatmentRequestService } from 'src/app/treatment-request/service/treatment-request.service';
 import {
-    initialState, ITreatmentRequestState,
-    TreatmentRequestStateService
+    initialState,
+    ITreatmentRequestState,
+    TreatmentRequestStateService,
 } from 'src/app/treatment-request/service/treatment-request.state';
 
 import { cloneAndUpdateAtPosition } from 'src/app/shared/testing/update-at-positiion';
@@ -21,8 +22,8 @@ describe('TreatmentRequestStateService', () => {
     const treatmentRequestDb = new TreatmentRequestDatabase();
     const patientDb = new PatientDatabase();
 
-    let patients = patientDb.getAsResponse(5);
-    let treatmentRequests = treatmentRequestDb.getAsResponse(5);
+    const patients = patientDb.getAsResponse(5);
+    const treatmentRequests = treatmentRequestDb.getAsResponse(5);
 
     let service: TreatmentRequestStateService;
     let subject$: ReplaySubject<ITreatmentRequestState>;
@@ -137,7 +138,7 @@ describe('TreatmentRequestStateService', () => {
                 }),
             );
 
-            let currentState = service.current;
+            const currentState = { ...service.current };
             const expectedMarbles = '(ab)';
             const expected: Record<string, ITreatmentRequestState> = {
                 a: {
