@@ -78,9 +78,11 @@ describe('PatientLookupComponent', () => {
         const patients = patientDb.getAsResponse(5);
         patientService._spy.getAll._func.and.returnValue(of(patients));
         fixture.detectChanges();
-        const rows = fixture.debugElement.queryAll(By.css('tr'));
+        const rows = fixture.debugElement.queryAll(By.css('tbody > tr'));
 
-        rows[1].triggerEventHandler('click', {});
+        expect(rows.length).toBe(patients.count);
+
+        rows[0].triggerEventHandler('click', {});
         fixture.detectChanges();
 
         expect(dialogRef.close).toHaveBeenCalledTimes(1);
