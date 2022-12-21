@@ -1,0 +1,62 @@
+<mat-card>
+    <mat-card-title>
+        <span>Pacientes</span>
+    </mat-card-title>
+    <div fxLayout="column">
+        <form
+            [formGroup]="filterForm"
+            (ngSubmit)="filter()"
+            fxLayout.gt-md="row"
+            fxLayout.lt-md="column"
+            fxLayoutAlign.gt-md="end center"
+            fxLayoutAlign.lt-md="start stretch"
+        >
+            <mat-form-field>
+                <mat-select placeholder="Filtro" formControlName="field">
+                    <mat-option [value]="'fullName'">Nome</mat-option>
+                    <mat-option [value]="'phone'">Telefone</mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field>
+                <input
+                    matInput
+                    placeholder="Pesquisar"
+                    formControlName="value"
+                />
+                <button mat-button mat-icon-button matSuffix>
+                    <mat-icon>search</mat-icon>
+                </button>
+            </mat-form-field>
+        </form>
+    </div>
+
+    <div fxLayout="column">
+        <table mat-table *ngIf="!loading" [dataSource]="rows$ | async">
+            <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Nome</th>
+                <td mat-cell *matCellDef="let row">
+                    {{ row.name }}
+                </td>
+            </ng-container>
+            <ng-container matColumnDef="lastName">
+                <th mat-header-cell *matHeaderCellDef>Sobrenome</th>
+                <td mat-cell *matCellDef="let row">
+                    {{ row.last_name }}
+                </td>
+            </ng-container>
+            <ng-container matColumnDef="phone">
+                <th mat-header-cell *matHeaderCellDef>Telefone</th>
+                <td mat-cell *matCellDef="let row">
+                    {{ row.phone }}
+                </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+            <tr
+                class="actionable"
+                mat-row
+                *matRowDef="let rowData; columns: columnsToDisplay"
+                (click)="selectPatient(rowData)"
+            ></tr>
+        </table>
+    </div>
+</mat-card>
