@@ -15,7 +15,7 @@ export interface ITreatmentRequestRow {
     loading: boolean;
     data: ITreatmentRequestResponse;
 }
-interface ITreatmentRequestState {
+export interface ITreatmentRequestState {
     loading: boolean;
     error: boolean;
     treatmentRequests: ITreatmentRequestRow[];
@@ -43,7 +43,7 @@ export class TreatmentRequestStateService {
 
     state$ = this.state.pipe();
 
-    private get current() {
+    get current() {
         return this.state.getValue();
     }
 
@@ -54,6 +54,10 @@ export class TreatmentRequestStateService {
 
     getState() {
         return this.state.pipe();
+    }
+
+    reset() {
+        this.state.next(initialState);
     }
 
     fetchTreatmentRequests(filter?: BaseFilter) {
