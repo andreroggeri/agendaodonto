@@ -6,6 +6,7 @@ on:
     paths:
       - "backend/**"
       - "chatbot/**"
+      - "webapp/**"
       - ".github/workflows/release.yml"
 
 jobs:
@@ -52,25 +53,35 @@ jobs:
           git_remote_url: ssh://dokku@deploy.agendaodonto.com/backend
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
           git_push_flags: "--force"
-#  release-front-end-staging:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
 
-#  e2e-tests-staging:
-#    runs-on: ubuntu-latest
-#    needs: [release-backend-staging, release-front-end-staging]
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#  release-front-end-production:
-#    runs-on: ubuntu-latest
-#    needs: [release-backend-staging, release-front-end-staging]
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#  release-backend-production:
-#    runs-on: ubuntu-latest
-#    needs: [ release-backend-staging, release-front-end-staging ]
-#    steps:
-#      - uses: actions/checkout@v2
+  release-webapp-staging:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+        - name: Check changes on webapp
+          id: changed-files
+          uses: tj-actions/changed-files@v34
+          with:
+            since_last_remote_commit: true
+            files: |
+              webapp/**
+
+        - name: Build
+          if: steps.changed-files.outputs.any_changed == 'true'
+          run: |
+            cd webapp
+            npm ci
+            npm run build:prod
+
+        - name: Deploy
+          if: steps.changed-files.outputs.any_changed == 'true'
+          uses: FirebaseExtended/action-hosting-deploy@v0
+          with:
+            repoToken: "${{ secrets.GITHUB_TOKEN }}"
+            firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+            projectId: agendaodonto-29023
+            channelId: main
+            entryPoint: ./webapp
+
