@@ -16,6 +16,7 @@ import {
     TreatmentRequestStateService,
 } from 'src/app/treatment-request/service/treatment-request.state';
 
+import { diff } from 'deep-object-diff';
 import { cloneAndUpdateAtPosition } from 'src/app/shared/testing/update-at-positiion';
 
 describe('TreatmentRequestStateService', () => {
@@ -50,7 +51,7 @@ describe('TreatmentRequestStateService', () => {
         subject$ = new ReplaySubject<ITreatmentRequestState>();
         service.state$.subscribe(subject$);
         scheduler = new TestScheduler((actual, expected) => {
-            console.log({ actual, expected });
+            console.log({ actual, expected, diff: diff(expected, actual) });
             expect(actual).toEqual(expected);
         });
     });
@@ -181,9 +182,294 @@ describe('TreatmentRequestStateService', () => {
                 );
             });
         });
+
+        it('should emit the current state if request fails', () => {
+            treatmentRequestService._spy.list._func.and.returnValue(
+                of(treatmentRequests),
+            );
+            service.fetchTreatmentRequests();
+
+            const row = service.current.treatmentRequests[1];
+
+            treatmentRequestService._spy.update._func.and.returnValue(
+                throwError('failed'),
+            );
+
+            const currentState = { ...service.current };
+            const expectedMarbles = '(ab)';
+            const expected: Record<string, ITreatmentRequestState> = {
+                a: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: true,
+                            data: {
+                                ...row.data,
+                            },
+                        },
+                    ),
+                },
+                b: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: false,
+                            data: {
+                                ...row.data,
+                            },
+                        },
+                    ),
+                },
+            };
+
+            scheduler.run(({ expectObservable }) => {
+                service.updateTreatmentRequest(
+                    row,
+                    TreatmentRequestStatus.READY,
+                );
+                expectObservable(subject$.pipe(skip(3))).toBe(
+                    expectedMarbles,
+                    expected,
+                );
+            });
+        });
     });
 
-    describe('createPatientFromTreatmentRequest', () => {});
-    describe('mergePatient', () => {});
-    describe('paginate', () => {});
+    describe('createPatientFromTreatmentRequest', () => {
+        it('should create patient from treatment request and update status to READY', () => {
+            let prevState;
+            service.state$.subscribe((state) => {
+                console.log({ state: diff(prevState, state) });
+                prevState = state;
+            });
+            treatmentRequestService._spy.list._func.and.returnValue(
+                of(treatmentRequests),
+            );
+            service.fetchTreatmentRequests();
+
+            const row = service.current.treatmentRequests[1];
+
+            treatmentRequestService._spy.update._func.and.returnValue(
+                of({
+                    ...row.data,
+                    status: TreatmentRequestStatus.READY,
+                }),
+            );
+
+            const createdPatient = patientDb.get();
+
+            patientService._spy.create._func.and.returnValue(
+                of(createdPatient),
+            );
+
+            const currentState = { ...service.current };
+            const expectedMarbles = '(abc)';
+            const expected: Record<string, ITreatmentRequestState> = {
+                a: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: true,
+                        },
+                    ),
+                },
+                b: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: true,
+                        },
+                    ),
+                },
+                c: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: false,
+                            data: {
+                                ...row.data,
+                                status: TreatmentRequestStatus.READY,
+                            },
+                        },
+                    ),
+                },
+            };
+
+            scheduler.run(({ expectObservable }) => {
+                service.createPatientFromTreatmentRequest(row);
+                expectObservable(subject$.pipe(skip(3))).toBe(
+                    expectedMarbles,
+                    expected,
+                );
+            });
+        });
+
+        it('should emit the current state if request fails', () => {
+            treatmentRequestService._spy.list._func.and.returnValue(
+                of(treatmentRequests),
+            );
+            service.fetchTreatmentRequests();
+
+            const row = service.current.treatmentRequests[1];
+
+            treatmentRequestService._spy.update._func.and.returnValue(
+                throwError('failed'),
+            );
+
+            patientService._spy.create._func.and.returnValue(
+                throwError('Failed'),
+            );
+
+            const currentState = { ...service.current };
+            const expectedMarbles = '(ab)';
+            const expected: Record<string, ITreatmentRequestState> = {
+                a: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: true,
+                        },
+                    ),
+                },
+                b: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: false,
+                        },
+                    ),
+                },
+            };
+
+            scheduler.run(({ expectObservable }) => {
+                service.createPatientFromTreatmentRequest(row);
+                expectObservable(subject$.pipe(skip(3))).toBe(
+                    expectedMarbles,
+                    expected,
+                );
+            });
+        });
+    });
+
+    describe('mergePatient', () => {
+        it('should merge patient and update status to READY', () => {
+            treatmentRequestService._spy.list._func.and.returnValue(
+                of(treatmentRequests),
+            );
+            service.fetchTreatmentRequests();
+
+            const row = service.current.treatmentRequests[1];
+
+            treatmentRequestService._spy.update._func.and.returnValue(
+                of({
+                    ...row.data,
+                    status: TreatmentRequestStatus.READY,
+                }),
+            );
+            patientService._spy.update._func.and.returnValue(
+                of(patientDb.get()),
+            );
+
+            const currentState = { ...service.current };
+            const expectedMarbles = '(abc)';
+            const expected: Record<string, ITreatmentRequestState> = {
+                a: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: true,
+                        },
+                    ),
+                },
+                b: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: true,
+                        },
+                    ),
+                },
+                c: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: false,
+                            data: {
+                                ...row.data,
+                                status: TreatmentRequestStatus.READY,
+                            },
+                        },
+                    ),
+                },
+            };
+
+            scheduler.run(({ expectObservable }) => {
+                service.mergePatient(row, patientDb.get());
+                expectObservable(subject$.pipe(skip(3))).toBe(
+                    expectedMarbles,
+                    expected,
+                );
+            });
+        });
+    });
+
+    describe('paginate', () => {
+        it('should paginate treatment requests', () => {
+            const secondPage = treatmentRequestDb.getAsResponse(5);
+            treatmentRequestService._spy.list._func.and.returnValues(
+                of(treatmentRequests),
+                of(secondPage),
+            );
+            service.fetchTreatmentRequests();
+
+            const currentState = { ...service.current };
+            const expectedMarbles = '(ab)';
+            const expected: Record<string, ITreatmentRequestState> = {
+                a: {
+                    ...currentState,
+                    loading: true,
+                    treatmentRequests: [...currentState.treatmentRequests],
+                },
+                b: {
+                    error: false,
+                    loading: false,
+                    treatmentRequests: secondPage.results.map((data) => {
+                        return {
+                            loading: false,
+                            data,
+                        };
+                    }),
+                    count: secondPage.count,
+                },
+            };
+
+            scheduler.run(({ expectObservable }) => {
+                service.paginate({ length: 20, pageIndex: 1, pageSize: 10 });
+                expectObservable(subject$.pipe(skip(3))).toBe(
+                    expectedMarbles,
+                    expected,
+                );
+            });
+        });
+    });
 });
