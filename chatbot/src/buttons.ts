@@ -1,8 +1,8 @@
 import * as messages from './messages';
 import { Messenger } from './messaging/messenger';
 
-enum ConversationState {
-  GatheringImage = 'GatheringImage',
+export enum ConversationState {
+  GatheringAmilCard = 'GatheringImage',
   Final = 'Final',
   ButtonFlow = 'ButtonFlow',
 }
@@ -19,26 +19,33 @@ export interface WhatsappChatFlow {
 }
 
 export type FlowName =
-  | 'queryInsuranceCard'
   | 'scheduleSuccesFlow'
   | 'querySchedulePeriod'
   | 'finishFlow'
   | 'privateScheduleFlow'
   | 'patientUnderMinimumAge'
-  | 'queryPatientAge'
+  | 'queryPatientAgeAmil'
   | 'queryPatientAgeInterodonto'
   | 'dentalPlanFlow'
   | 'scheduleAppointment'
   | 'informationFlow'
   | 'initialFlow'
-  | 'queryInsuranceSchedulePeriod';
+  | 'queryAmilInsuranceCard'
+  | 'queryInterodontoInsuranceCard'
+  | 'queryAmilSchedulePeriod'
+  | 'queryInterodontoSchedulePeriod'
 
 function buildFlows(): Record<FlowName, WhatsappChatFlow> {
   const flows: Partial<Record<FlowName, WhatsappChatFlow>> = {
-    queryInsuranceCard: {
+    queryAmilInsuranceCard: {
       message: messages.queryInsuranceCard,
       buttons: [],
-      state: ConversationState.GatheringImage,
+      state: ConversationState.GatheringAmilCard,
+    },
+    queryInterodontoInsuranceCard: {
+      message: messages.queryInsuranceCard,
+      buttons: [],
+      state: ConversationState.Final,
     },
     scheduleSuccesFlow: {
       message: messages.scheduleSuccessFlowEnded,
@@ -61,14 +68,23 @@ function buildFlows(): Record<FlowName, WhatsappChatFlow> {
     state: ConversationState.ButtonFlow,
   };
 
-  flows.queryInsuranceSchedulePeriod = {
+  flows.queryAmilSchedulePeriod = {
     message: messages.querySchedulePeriod,
     buttons: [
-      { text: 'Manhã', nextFlow: 'queryInsuranceCard' },
-      { text: 'Tarde', nextFlow: 'queryInsuranceCard' },
+      { text: 'Manhã', nextFlow: 'queryAmilInsuranceCard' },
+      { text: 'Tarde', nextFlow: 'queryAmilInsuranceCard' },
     ],
     state: ConversationState.ButtonFlow,
   };
+
+  flows.queryInterodontoSchedulePeriod = {
+    message: messages.querySchedulePeriod,
+    buttons: [
+      { text: 'Manhã', nextFlow: 'queryInterodontoInsuranceCard' },
+      { text: 'Tarde', nextFlow: 'queryInterodontoInsuranceCard' },
+    ],
+    state: ConversationState.ButtonFlow,
+  }
 
   flows.privateScheduleFlow = {
     message: messages.privateScheduleInformation,
@@ -85,12 +101,12 @@ function buildFlows(): Record<FlowName, WhatsappChatFlow> {
     state: ConversationState.Final,
   };
 
-  flows.queryPatientAge = {
+  flows.queryPatientAgeAmil = {
     message: messages.queryPatientAge,
     buttons: [
       { text: '0 a 8 anos', nextFlow: 'patientUnderMinimumAge' },
-      { text: '9 a 18 anos', nextFlow: 'queryInsuranceSchedulePeriod' },
-      { text: '18 anos ou mais', nextFlow: 'queryInsuranceSchedulePeriod' },
+      { text: '9 a 18 anos', nextFlow: 'queryAmilSchedulePeriod' },
+      { text: '18 anos ou mais', nextFlow: 'queryAmilSchedulePeriod' },
     ],
     state: ConversationState.ButtonFlow,
   };
@@ -99,8 +115,8 @@ function buildFlows(): Record<FlowName, WhatsappChatFlow> {
     message: messages.queryPatientAge,
     buttons: [
       { text: '0 a 10 anos', nextFlow: 'patientUnderMinimumAge' },
-      { text: '11 a 18 anos', nextFlow: 'queryInsuranceSchedulePeriod' },
-      { text: '18 anos ou mais', nextFlow: 'queryInsuranceSchedulePeriod' },
+      { text: '11 a 18 anos', nextFlow: 'queryInterodontoSchedulePeriod' },
+      { text: '18 anos ou mais', nextFlow: 'queryInterodontoSchedulePeriod' },
     ],
     state: ConversationState.ButtonFlow,
   };
@@ -108,7 +124,7 @@ function buildFlows(): Record<FlowName, WhatsappChatFlow> {
   flows.dentalPlanFlow = {
     message: messages.queryDentalPlan,
     buttons: [
-      { text: 'Amil Dental', nextFlow: 'queryPatientAge' },
+      { text: 'Amil Dental', nextFlow: 'queryPatientAgeAmil' },
       { text: 'Interodonto', nextFlow: 'queryPatientAgeInterodonto' },
     ],
     state: ConversationState.ButtonFlow,
