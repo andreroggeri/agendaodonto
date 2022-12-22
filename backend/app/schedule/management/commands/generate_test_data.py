@@ -18,6 +18,7 @@ class Command(BaseCommand):
         parser.add_argument('--patients', type=bool)
         parser.add_argument('--clinics', type=bool)
         parser.add_argument('--schedules', type=bool)
+        parser.add_argument('--dental_plans', type=bool)
         parser.add_argument('--patient_count', type=int)
         parser.add_argument('--schedule_count', type=int)
 
@@ -104,6 +105,12 @@ class Command(BaseCommand):
                 status=random.choice(Schedule.STATUS_CHOICES)[0]
             )
 
+    def generate_dental_plans(self, count):
+        for i in range(0, count):
+            DentalPlan.objects.create(
+                name='Plan {}'.format(i),
+            )
+
     def handle(self, *args, **options):
         if not settings.DEBUG:
             raise Exception('DO NOT RUN THIS ON PRODUCTION !!')
@@ -127,3 +134,7 @@ class Command(BaseCommand):
             count = 100 if count is None else count
             print("Creating {} schedules...".format(count))
             self.generate_schedules(count)
+
+        if options.get('dental_plans'):
+            print("Creating dental plans...")
+            self.generate_dental_plans(10)

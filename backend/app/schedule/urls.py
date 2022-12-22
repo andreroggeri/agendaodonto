@@ -36,7 +36,7 @@ urlpatterns = [
     url(r'^dental-plans/stats/$', DentalPlanStats.as_view(), name='dental-plan-stats'),
 
     # Treatment request
-    url(r'^treatment-request/$', TreatmentRequestList.as_view(), name='treatment-requests'),
-    url(r'^treatment-request/(?P<pk>[0-9]+)/$', TreatmentRequestDetail.as_view(), name='treatment-request-detail'),
+    url(r'^treatment-requests/$', TreatmentRequestList.as_view(), name='treatment-requests'),
+    url(r'^treatment-requests/(?P<pk>[0-9]+)/$', TreatmentRequestDetail.as_view(), name='treatment-request-detail'),
 ]
 urlpatterns = format_suffix_patterns(urlpatterns)
