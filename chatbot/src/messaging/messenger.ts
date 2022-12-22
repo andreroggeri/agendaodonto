@@ -4,12 +4,13 @@ import makeWASocket, {
   fetchLatestBaileysVersion,
   makeInMemoryStore,
   proto,
-  useMultiFileAuthState
+  useMultiFileAuthState,
 } from '@adiwajshing/baileys';
 import { Boom } from '@hapi/boom';
 import { Redis } from 'ioredis';
 import slugify from 'slugify';
 import { WhatsappButton } from '../buttons';
+import { extractPhoneFromJid } from '../phone';
 import { settings } from '../settings';
 
 const STORE_KEY = 'whatsapp_store';
@@ -19,6 +20,11 @@ export class Messenger {
   private socket: ReturnType<typeof makeWASocket>;
   private store: ReturnType<typeof makeInMemoryStore>;
   private storeHandlerInterval: NodeJS.Timer;
+
+  get phoneNumber() {
+    const me = this.socket.authState.creds.me;
+    return extractPhoneFromJid(me?.id ?? '');
+  }
 
   constructor(private readonly redis: Redis) {}
 
