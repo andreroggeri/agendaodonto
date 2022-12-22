@@ -10,6 +10,16 @@ import {
     TreatmentRequestStateService,
 } from 'src/app/treatment-request/service/treatment-request.state';
 
+const labelMap: Record<TreatmentRequestStatus, string> = {
+    [TreatmentRequestStatus.PENDING]: 'Buscando dados',
+    [TreatmentRequestStatus.DATA_FETCHED_NEW_PATIENT]: 'Paciente novo',
+    [TreatmentRequestStatus.DATA_FETCHED_KNOWN_PATIENT]: 'Paciente já existe',
+    [TreatmentRequestStatus.DATA_FETCH_FAIL]: 'Erro ao buscar os dados',
+    [TreatmentRequestStatus.READY]: 'Aguardando solicitação de tratamento',
+    [TreatmentRequestStatus.CANCELED]: 'Solicitação cancelada',
+    [TreatmentRequestStatus.REQUESTED]: 'Solicitação enviada',
+};
+
 @Component({
     selector: 'app-treatment-request',
     templateUrl: './treatment-request.component.html',
@@ -104,5 +114,9 @@ export class TreatmentRequestComponent implements OnInit {
             [TreatmentRequestStatus.REQUESTED]: [],
         };
         return row.loading || !statusMap[row.data.status].includes(action);
+    }
+
+    getLabelForStatus(status: TreatmentRequestStatus): string {
+        return labelMap[status];
     }
 }
