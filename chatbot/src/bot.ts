@@ -2,9 +2,11 @@ import * as express from 'express';
 import { exit } from 'process';
 import slugify from 'slugify';
 import buildApiRouter from './api/router';
-import { flows, runFlow } from './buttons';
+import apiService, { TreatmentRequestStatus } from './api/services/api.service';
+import { ConversationState, flows, runFlow } from './buttons';
 import { loadContext } from './context';
 import { Messenger } from './messaging/messenger';
+import { extractPhoneFromJid } from './phone';
 import { redis } from './redis';
 import { settings } from './settings';
 import { vision } from './vision';
@@ -39,8 +41,6 @@ async function handleButtonResponse(client: Messenger, from: string, selectedBut
 
   const nextFlow = selectedButton.nextFlow;
 
-  // await nextFlow.execute(client, context);
-
   await runFlow(nextFlow, client, from);
 
   context.setCurrentFlow(nextFlow);
@@ -49,20 +49,40 @@ async function handleButtonResponse(client: Messenger, from: string, selectedBut
 }
 
 async function handleImage(client: Messenger, from: string, image: Buffer) {
-  // const context = await loadContext(from);
+  try {
+    const context = await loadContext(from);
 
-  // const currenetState = context.getCurrentFlow().state;
+    const flow = context.getCurrentFlow();
 
-  // console.log('Received image', { from, url });
-  const [result] = await vision.textDetection(image);
-  const hasCardNumber = result.fullTextAnnotation?.text?.match(/\d{9}\n/);
-  if (hasCardNumber) {
-    const cardNumber = hasCardNumber[0].trim();
-    console.log({ cardNumber });
-  } else {
-    console.warn('No card number found');
+    if (flow.state !== ConversationState.GatheringAmilCard) {
+      console.log('Received image but not expecting one');
+      return;
+    }
+
+    const [result] = await vision.textDetection(image);
+    const cardNumberMatch = result.fullTextAnnotation?.text?.replace(/ /g, '').match(/\d{9}\n/g);
+    console.log({ result: result.fullTextAnnotation?.text?.replace(/ /g, '') });
+    if (cardNumberMatch) {
+      const found = [...cardNumberMatch].map((c) => c.trim());
+      console.log('Found card numbers: ', { foundCardNumbers: found });
+      const dentalPlan = await apiService.findDentalPlanByName('amil');
+
+      for (const cardNumber of found) {
+        await apiService.createTreatmentRequest({
+          dental_plan: dentalPlan.id,
+          dental_plan_card_number: cardNumber,
+          patient_phone: extractPhoneFromJid(from),
+          dentist_phone: client.phoneNumber,
+          status: TreatmentRequestStatus.PENDING,
+          clinic: settings.scheduleApi.clinicId,
+        });
+      }
+    } else {
+      console.warn('No card number found');
+    }
+  } catch (err) {
+    console.error('Failed to handle message', err);
   }
-  // console.log(hasCardNumber);
 }
 
 void (async () => {
