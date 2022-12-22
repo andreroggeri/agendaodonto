@@ -24,7 +24,7 @@ services:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/dev_db
       - DJANGO_SECRET_KEY=SOME_KEY
     ports:
-      - "8001:8000"
+      - "8000:8000"
     depends_on:
       - db
       - rabbitmq
@@ -33,13 +33,13 @@ services:
     restart: always
 
   db:
-    image: postgres:14
+    image: postgres:13.3
     environment:
       - POSTGRES_DB=dev_db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - ./dbdata:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     ports:
       - 5432:5432
 
@@ -56,3 +56,6 @@ services:
     image: rabbitmq:3-management
     ports:
       - "8080:15672"
+      - "5672:5672"
+volumes:
+  db_data:

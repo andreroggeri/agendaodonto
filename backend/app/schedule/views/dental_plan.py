@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from app.schedule.models import DentalPlan, Schedule
+from app.schedule.permissions.api_key_permission import IsApiKeyValid
 from app.schedule.serializers.dental_plan import DentalPlanSerializer
 
 
@@ -27,7 +28,7 @@ class DentalPlanList(ListCreateAPIView):
     """
     serializer_class = DentalPlanSerializer
     queryset = DentalPlan.objects.all()
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated | IsApiKeyValid,)
     filter_class = DentalPlanFilter
 
 

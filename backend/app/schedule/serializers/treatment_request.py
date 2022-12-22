@@ -18,6 +18,7 @@ class TreatmentRequestSerializer(ModelSerializer):
                   'patient_birth_date',
                   'patient_cpf_hash',
                   'patient_gender',
+                  'clinic'
                   )
 
     def create(self, validated_data):

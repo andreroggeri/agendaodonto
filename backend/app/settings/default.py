@@ -182,8 +182,8 @@ LOGGING = {
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
         },
         'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': True,
         },
         'app.schedule': {
@@ -240,3 +240,4 @@ SWAGGER_SETTINGS = {
 # Notification Settings
 MESSAGING_URL = os.getenv('MESSAGING_URL', 'http://localhost:8000')
 MESSAGING_API_KEY = os.getenv('MESSAGING_API_KEY')
+API_KEY = os.getenv('API_KEY')
