@@ -27,6 +27,8 @@ class Patient(TimeStampedModel):
     last_name = models.CharField('Sobrenome', max_length=30)
     phone = models.CharField('Telefone', max_length=14)
     sex = models.CharField('Sexo', max_length=1, choices=SEX_TYPES)
-    clinic = models.ForeignKey(Clinic, on_delete=CASCADE)
+    clinic = ForeignKey(Clinic, on_delete=CASCADE)
     dental_plan = ForeignKey(DentalPlan, default=None, null=True, blank=True, on_delete=CASCADE)
+    dental_plan_card_number = models.CharField('Número da carteirinha', max_length=50, default=None, null=True,
+                                               blank=True, unique=True)
     # cpf_hash = models.CharField('CPF', max_length=64, default=None, null=True, blank=True)

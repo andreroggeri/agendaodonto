@@ -8,7 +8,8 @@ from app.schedule.serializers.dental_plan import DentalPlanSerializer
 class PatientSerializer(ModelSerializer):
     class Meta:
         model = Patient
-        fields = ('id', 'name', 'last_name', 'sex', 'phone', 'clinic', 'created', 'modified', 'dental_plan')
+        fields = ('id', 'name', 'last_name', 'sex', 'phone', 'clinic', 'created', 'modified', 'dental_plan',
+                  'dental_plan_card_number')
 
 
 class PatientListSerializer(PatientSerializer):
