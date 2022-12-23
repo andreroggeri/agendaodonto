@@ -54,7 +54,7 @@ jobs:
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
           git_push_flags: "--force"
 
-  release-webapp-staging:
+  release-webapp-production:
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v3
