@@ -19,7 +19,17 @@ export function currentTimeGreeting(): string {
 // TODO: Handle dynamic messages
 // export const initialGreetingMessage =  `${currentTimeGreeting()}, tudo bem ?\n\nVocê está falando com o Consultório Odontológico Dra. Luana Elisa Doretto\n\nEm que posso ajudar ?`;
 
-export const initialGreetingMessage =  `Olá, tudo bem ?\n\nVocê está falando com o Consultório Odontológico Dra. Luana Elisa Doretto\n\nEm que posso ajudar ?`;
+export const initialGreetingMessage = `Olá, tudo bem ?
+
+Você está falando com o Consultório Odontológico Dra. Luana Elisa Doretto
+
+*Estou em período de recesso até o próximo ano, período em que não estarei realizando atendimentos.*
+
+Desejo um feliz natal e um próspero ano novo.
+
+Agendamentos para 2023 podem ser feitos através dos botões abaixo 👇
+
+Em que posso ajudar ?`;
 
 export const informationMessage = `
 *Horário de funcionamento:* 09:00 - 16:00
