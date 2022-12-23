@@ -12,8 +12,8 @@ ALLOWED_HOSTS = [
 DATABASES = {'default': dj_database_url.config()}
 
 CORS_ORIGIN_WHITELIST = (
-    'agendaodonto.com',
-    'backend.agendaodonto.com',
+    'https://agendaodonto.com',
+    'https://backend.agendaodonto.com',
 )
 
 DJOSER['DOMAIN'] = 'agendaodonto.com'
