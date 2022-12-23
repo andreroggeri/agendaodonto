@@ -42,7 +42,7 @@
     "@types/ioredis": "^4.27.8",
     "@types/node": "^18.14.6",
     "@types/object-hash": "^3.0.0",
-    "@types/redis": "^2.8.32",
+    "@types/redis": "^4.0.11",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "eslint": "^8.35.0",
     "eslint-config-standard-with-typescript": "^23.0.0",
