@@ -68,6 +68,13 @@ jobs:
           files: |
             webapp/**
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          cache: "npm"
+          cache-dependency-path: webapp/package-lock.json
+
       - name: Build
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
@@ -82,8 +89,7 @@ jobs:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_STAGING_ACCOUNT }}"
           projectId: agendaodontoweb-staging
-          # projectId: agendaodonto-29023
-          channelId: main
+          channelId: live
           entryPoint: ./webapp
 
 
