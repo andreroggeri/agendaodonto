@@ -33,5 +33,6 @@ import { ScheduleStatusComponent } from './schedule-status/schedule-status.compo
         PatientLookupComponent,
     ],
     providers: [],
+    entryComponents: [PatientLookupComponent],
 })
 export class SharedComponentsModule {}
