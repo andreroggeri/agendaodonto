@@ -8,4 +8,13 @@ export class TreatmentRequestService extends CrudService<ITreatmentRequestRespon
     constructor(http: HttpClient) {
         super(http, 'treatment-requests');
     }
+
+    requestTreatment(treatmentRequest: ITreatmentRequestResponse) {
+        const url = this.url([
+            'treatment-requests',
+            treatmentRequest.id,
+            'submit',
+        ]);
+        return this.http.post<void>(url, treatmentRequest);
+    }
 }

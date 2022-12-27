@@ -18,6 +18,9 @@ const labelMap: Record<TreatmentRequestStatus, string> = {
     [TreatmentRequestStatus.READY]: 'Aguardando solicitação de tratamento',
     [TreatmentRequestStatus.CANCELED]: 'Solicitação cancelada',
     [TreatmentRequestStatus.REQUESTED]: 'Solicitação enviada',
+    [TreatmentRequestStatus.SUBMITTED]: 'Tratamento solicitado com sucesso',
+    [TreatmentRequestStatus.SUBMITTING]: 'Solicitando tratamento',
+    [TreatmentRequestStatus.SUBMIT_FAIL]: 'Erro ao solicitar tratamento',
 };
 
 @Component({
@@ -96,6 +99,10 @@ export class TreatmentRequestComponent implements OnInit {
         });
     }
 
+    requestTreatment(row: ITreatmentRequestRow) {
+        this.state.requestTreatment(row);
+    }
+
     buttonStateForStatus(action: string, row: ITreatmentRequestRow): boolean {
         const statusMap: Record<TreatmentRequestStatus, string[]> = {
             [TreatmentRequestStatus.PENDING]: ['cancel'],
@@ -112,6 +119,9 @@ export class TreatmentRequestComponent implements OnInit {
             [TreatmentRequestStatus.READY]: [], // TODO: Should be 'cancel', 'request_treatment' but we don't have the endpoint yet
             [TreatmentRequestStatus.CANCELED]: [],
             [TreatmentRequestStatus.REQUESTED]: [],
+            [TreatmentRequestStatus.SUBMITTED]: [],
+            [TreatmentRequestStatus.SUBMITTING]: [],
+            [TreatmentRequestStatus.SUBMIT_FAIL]: [],
         };
         return row.loading || !statusMap[row.data.status].includes(action);
     }

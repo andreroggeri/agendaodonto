@@ -90,6 +90,7 @@
                         disabled="{{
                             buttonStateForStatus('request_treatment', row)
                         }}"
+                        (click)="requestTreatment(row)"
                     >
                         <mat-icon>calendar_today</mat-icon>
                     </button>

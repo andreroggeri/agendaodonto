@@ -100,25 +100,7 @@ export class TreatmentRequestStateService {
         row: ITreatmentRequestRow,
         status: TreatmentRequestStatus,
     ) {
-        const foundIdx = this.current.treatmentRequests.findIndex(
-            (r) => r === row,
-        );
-
-        if (foundIdx < 0) {
-            console.warn('Treatment request not found');
-            return;
-        }
-
-        const updated = [...this.current.treatmentRequests];
-        updated[foundIdx] = {
-            ...row,
-            loading: true,
-        };
-
-        this.state.next({
-            ...this.current,
-            treatmentRequests: [...updated],
-        });
+        this.updateRow(row, { loading: true });
 
         const data: ITreatmentRequestResponse = {
             ...row.data,
@@ -132,33 +114,12 @@ export class TreatmentRequestStateService {
                 }),
             )
             .subscribe((response) => {
-                updated[foundIdx] = {
-                    loading: false,
-                    data: response,
-                };
-                this.state.next({
-                    ...this.current,
-                    treatmentRequests: [...updated],
-                });
+                this.updateRow(row, { loading: false, data: response });
             });
     }
 
     createPatientFromTreatmentRequest(row: ITreatmentRequestRow) {
-        const foundIdx = this.current.treatmentRequests.findIndex(
-            (r) => r === row,
-        );
-        if (foundIdx < 0) {
-            return;
-        }
-        const updated = [...this.current.treatmentRequests];
-        updated[foundIdx] = {
-            ...row,
-            loading: true,
-        };
-        this.state.next({
-            ...this.current,
-            treatmentRequests: [...updated],
-        });
+        this.updateRow(row, { loading: true });
         const patient: IPatientResponse = {
             id: 0,
             name: row.data.patient_first_name,
@@ -178,40 +139,16 @@ export class TreatmentRequestStateService {
         };
         this.patientService.create(patient).subscribe(
             (_) => {
-                this.updateTreatmentRequest(
-                    this.current.treatmentRequests[foundIdx],
-                    TreatmentRequestStatus.READY,
-                );
+                this.updateTreatmentRequest(row, TreatmentRequestStatus.READY);
             },
             (err) => {
-                updated[foundIdx] = {
-                    ...row,
-                    loading: false,
-                };
-                this.state.next({
-                    ...this.current,
-                    treatmentRequests: [...updated],
-                });
+                this.updateRow(row, { loading: false });
             },
         );
     }
 
     mergePatient(row: ITreatmentRequestRow, patient: IPatientResponse) {
-        const foundIdx = this.current.treatmentRequests.findIndex(
-            (r) => r === row,
-        );
-        if (foundIdx < 0) {
-            return;
-        }
-        const updated = [...this.current.treatmentRequests];
-        updated[foundIdx] = {
-            ...row,
-            loading: true,
-        };
-        this.state.next({
-            ...this.current,
-            treatmentRequests: [...updated],
-        });
+        this.updateRow(row, { loading: true });
         const updatedPatient = {
             ...patient,
             name: row.data.patient_first_name,
@@ -221,19 +158,32 @@ export class TreatmentRequestStateService {
         };
         this.patientService.update(updatedPatient).subscribe(
             (_) => {
-                this.updateTreatmentRequest(
-                    this.current.treatmentRequests[foundIdx],
-                    TreatmentRequestStatus.READY,
-                );
+                this.updateTreatmentRequest(row, TreatmentRequestStatus.READY);
             },
             (err) => {
-                updated[foundIdx] = {
-                    ...row,
+                this.updateRow(row, { loading: false });
+            },
+        );
+    }
+
+    requestTreatment(row: ITreatmentRequestRow) {
+        console.log('request treatment', row);
+        this.updateRow(row, { loading: true });
+
+        this.service.requestTreatment(row.data).subscribe(
+            (_) => {
+                const x = TreatmentRequestStatus.SUBMITTING;
+                this.updateRow(row, {
                     loading: false,
-                };
-                this.state.next({
-                    ...this.current,
-                    treatmentRequests: [...updated],
+                    data: {
+                        ...row.data,
+                        status: TreatmentRequestStatus.SUBMITTING,
+                    },
+                });
+            },
+            (err) => {
+                this.updateRow(row, {
+                    loading: false,
                 });
             },
         );
@@ -246,5 +196,30 @@ export class TreatmentRequestStateService {
         filter.setFilterValue('offset', offset.toString());
 
         this.fetchTreatmentRequests(filter);
+    }
+
+    private updateRow(
+        row: ITreatmentRequestRow,
+        data: Partial<ITreatmentRequestRow>,
+    ) {
+        const foundIdx = this.current.treatmentRequests.findIndex(
+            (r) => r.data.id === row.data.id,
+        );
+
+        if (foundIdx < 0) {
+            console.warn('Treatment request not found');
+            return;
+        }
+
+        const updated = [...this.current.treatmentRequests];
+        updated[foundIdx] = {
+            ...row,
+            ...data,
+        };
+
+        this.state.next({
+            ...this.current,
+            treatmentRequests: [...updated],
+        });
     }
 }
