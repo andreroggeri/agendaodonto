@@ -6,6 +6,9 @@ export enum TreatmentRequestStatus {
     READY = 'READY',
     CANCELED = 'CANCELED',
     REQUESTED = 'REQUESTED',
+    SUBMITTING = 'SUBMITTING',
+    SUBMITTED = 'SUBMITTED',
+    SUBMIT_FAIL = 'SUBMIT_FAIL',
 }
 
 export interface ITreatmentRequestResponse {

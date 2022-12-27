@@ -472,4 +472,56 @@ describe('TreatmentRequestStateService', () => {
             });
         });
     });
+
+    describe('requestTreatment', () => {
+        it('should request treatment', () => {
+            treatmentRequestService._spy.list._func.and.returnValue(
+                of(treatmentRequests),
+            );
+            treatmentRequestService._spy.requestTreatment._func.and.returnValue(
+                of(true),
+            );
+
+            service.fetchTreatmentRequests();
+
+            const currentState = { ...service.current };
+            const row = service.current.treatmentRequests[1];
+
+            service.requestTreatment(row);
+
+            const expected: Record<string, ITreatmentRequestState> = {
+                a: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: true,
+                            data: {
+                                ...row.data,
+                            },
+                        },
+                    ),
+                },
+                b: {
+                    ...currentState,
+                    treatmentRequests: cloneAndUpdateAtPosition(
+                        1,
+                        currentState.treatmentRequests,
+                        {
+                            loading: false,
+                            data: {
+                                ...row.data,
+                                status: TreatmentRequestStatus.SUBMITTING,
+                            },
+                        },
+                    ),
+                },
+            };
+
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(subject$.pipe(skip(3))).toBe('(ab)', expected);
+            });
+        });
+    });
 });
