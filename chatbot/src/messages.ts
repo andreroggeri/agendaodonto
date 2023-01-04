@@ -23,12 +23,6 @@ export const initialGreetingMessage = `Olá, tudo bem ?
 
 Você está falando com o Consultório Odontológico Dra. Luana Elisa Doretto
 
-*Estou em período de recesso até o próximo ano, período em que não estarei realizando atendimentos.*
-
-Desejo um feliz natal e um próspero ano novo.
-
-Agendamentos para 2023 podem ser feitos através dos botões abaixo 👇
-
 Em que posso ajudar ?`;
 
 export const informationMessage = `
