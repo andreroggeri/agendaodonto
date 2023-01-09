@@ -172,7 +172,6 @@ export class TreatmentRequestStateService {
 
         this.service.requestTreatment(row.data).subscribe(
             (_) => {
-                const x = TreatmentRequestStatus.SUBMITTING;
                 this.updateRow(row, {
                     loading: false,
                     data: {
