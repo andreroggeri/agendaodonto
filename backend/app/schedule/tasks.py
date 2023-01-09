@@ -29,6 +29,10 @@ def send_message(self, schedule_id):
 
         if result:
             schedule.notification_status = 1  # TODO: use enum
+        else:
+            schedule.notification_status = 2
+
+        schedule.save()
 
         return result
     except TimeoutError as e:
