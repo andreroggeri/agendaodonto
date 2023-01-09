@@ -20,7 +20,6 @@ class TreatmentRequestStatus(TextChoices):
     DATA_FETCHED_KNOWN_PATIENT = 'DATA_FETCHED_KNOWN_PATIENT', _('Data Fetched - Known Patient')
     DATA_FETCH_FAIL = 'DATA_FETCH_FAIL', _('Data Fetch Fail')
     READY = 'READY', _('Ready')
-    REQUESTED = 'REQUESTED', _('Requested')
     CANCELED = 'CANCELED', _('Canceled')
     SUBMITTING = 'SUBMITTING', _('Submitting')
     SUBMITTED = 'SUBMITTED', _('Submitted')
