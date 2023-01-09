@@ -57,7 +57,7 @@ def fetch_dental_plan_data(self, treatment_request_id):
         patient = Patient.objects.filter(dental_plan_card_number=treatment_request.dental_plan_card_number).first()
         if patient:
             treatment_request.patient = patient
-            treatment_request.status = TreatmentRequestStatus.DATA_FETCHED_KNOWN_PATIENT
+            treatment_request.status = TreatmentRequestStatus.READY
         else:
             treatment_request.status = TreatmentRequestStatus.DATA_FETCHED_NEW_PATIENT
         treatment_request.save()
