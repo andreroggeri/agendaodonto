@@ -13,11 +13,12 @@ import {
 const labelMap: Record<TreatmentRequestStatus, string> = {
     [TreatmentRequestStatus.PENDING]: 'Buscando dados',
     [TreatmentRequestStatus.DATA_FETCHED_NEW_PATIENT]: 'Paciente novo',
-    [TreatmentRequestStatus.DATA_FETCHED_KNOWN_PATIENT]: 'Paciente já existe',
     [TreatmentRequestStatus.DATA_FETCH_FAIL]: 'Erro ao buscar os dados',
     [TreatmentRequestStatus.READY]: 'Aguardando solicitação de tratamento',
     [TreatmentRequestStatus.CANCELED]: 'Solicitação cancelada',
-    [TreatmentRequestStatus.REQUESTED]: 'Solicitação enviada',
+    [TreatmentRequestStatus.SUBMITTED]: 'Tratamento solicitado com sucesso',
+    [TreatmentRequestStatus.SUBMITTING]: 'Solicitando tratamento',
+    [TreatmentRequestStatus.SUBMIT_FAIL]: 'Erro ao solicitar tratamento',
 };
 
 @Component({
@@ -96,6 +97,10 @@ export class TreatmentRequestComponent implements OnInit {
         });
     }
 
+    requestTreatment(row: ITreatmentRequestRow) {
+        this.state.requestTreatment(row);
+    }
+
     buttonStateForStatus(action: string, row: ITreatmentRequestRow): boolean {
         const statusMap: Record<TreatmentRequestStatus, string[]> = {
             [TreatmentRequestStatus.PENDING]: ['cancel'],
@@ -104,14 +109,12 @@ export class TreatmentRequestComponent implements OnInit {
                 'create_new_patient',
                 'merge_patient',
             ],
-            [TreatmentRequestStatus.DATA_FETCHED_KNOWN_PATIENT]: [
-                'cancel',
-                'request_treatment',
-            ],
             [TreatmentRequestStatus.DATA_FETCH_FAIL]: [],
-            [TreatmentRequestStatus.READY]: [], // TODO: Should be 'cancel', 'request_treatment' but we don't have the endpoint yet
+            [TreatmentRequestStatus.READY]: ['cancel', 'request_treatment'], // TODO: Should be 'cancel', 'request_treatment' but we don't have the endpoint yet
             [TreatmentRequestStatus.CANCELED]: [],
-            [TreatmentRequestStatus.REQUESTED]: [],
+            [TreatmentRequestStatus.SUBMITTED]: [],
+            [TreatmentRequestStatus.SUBMITTING]: ['cancel'],
+            [TreatmentRequestStatus.SUBMIT_FAIL]: [],
         };
         return row.loading || !statusMap[row.data.status].includes(action);
     }

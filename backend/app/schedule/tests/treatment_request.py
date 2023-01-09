@@ -7,7 +7,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CON
 from rest_framework.test import APITestCase
 
 from app.schedule.models import Dentist, Clinic, DentalPlan
-from app.schedule.models.treatment_request import TreatmentRequest
+from app.schedule.models.treatment_request import TreatmentRequest, TreatmentRequestStatus
 
 
 class TreatmentRequestAPITest(APITestCase):
@@ -101,3 +101,18 @@ class TreatmentRequestAPITest(APITestCase):
         self.assertEqual(treatment_request.patient_last_name, 'Doe')
         self.assertEqual(treatment_request.patient_birth_date, datetime.date(1990, 1, 1), )
         self.assertEqual(treatment_request.patient_gender, 'M')
+
+    def test_submit_request(self):
+        treatment_request = TreatmentRequest.objects.create(
+            dental_plan=self.dental_plan,
+            dentist_phone=self.dentist.phone,
+            dental_plan_card_number='1234', patient_phone='13245678912',
+            clinic_id=self.clinic.pk,
+            status=TreatmentRequestStatus.READY
+        )
+
+        url = reverse('treatment-request-submit', kwargs={'pk': treatment_request.id})
+
+        response = self.client.post(url)
+
+        self.assertEqual(HTTP_201_CREATED, response.status_code)

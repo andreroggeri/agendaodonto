@@ -7,7 +7,7 @@ import { BaseService } from 'src/app/shared/services/base.service';
 type CreatedEntity<T> = T & { id: number };
 
 export abstract class CrudService<T> extends BaseService {
-    constructor(private http: HttpClient, private endpoint: string) {
+    constructor(protected http: HttpClient, private endpoint: string) {
         super();
     }
 
