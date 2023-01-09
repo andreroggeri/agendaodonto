@@ -1,9 +1,12 @@
 from rest_framework import permissions
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from app.schedule.models.treatment_request import TreatmentRequest
+from app.schedule.models.treatment_request import TreatmentRequest, TreatmentRequestStatus
 from app.schedule.permissions.api_key_permission import IsApiKeyValid
 from app.schedule.serializers.treatment_request import TreatmentRequestSerializer
+from app.schedule.tasks import submit_basic_treatment_request
 
 
 class TreatmentRequestList(ListCreateAPIView):
@@ -32,3 +35,12 @@ class TreatmentRequestDetail(RetrieveUpdateDestroyAPIView):
             return TreatmentRequest.objects.filter(dentist_phone=self.request.user.phone)
         else:
             return TreatmentRequest.objects.all()
+
+
+class TreatmentRequestSubmit(APIView):
+    def post(self, request, pk):
+        treatment_request = TreatmentRequest.objects.get(pk=pk)
+        treatment_request.status = TreatmentRequestStatus.SUBMITTING
+        treatment_request.save()
+        submit_basic_treatment_request.delay(pk)
+        return Response(status=201)
