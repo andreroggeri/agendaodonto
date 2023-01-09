@@ -88,7 +88,7 @@ class AmilService(BaseAmilService):
         })
 
     def request_basic_treatment(self, card_number: str):
-        url = f'{api_base_url}/credenciado-dental/api/CredenciadoDental/PlanoTratamento/SolicitaLiberacao/MarcaOtica/{card_number}'
+        url = f'{api_base_url}/CredenciadoDental/PlanoTratamento/SolicitaLiberacao/MarcaOtica/{card_number}'
         plan_data = self.fetch_dental_plan_data(card_number)
         addresses = self._fetch_treatment_address_data(card_number)
         provider_info = self._fetch_provider_information()
@@ -187,7 +187,7 @@ class AmilService(BaseAmilService):
         response.raise_for_status()
 
         return response.json()
-
+    # /credenciado-dental/api/CredenciadoDental/PlanoTratamento/SolicitaLiberacao/MarcaOtica/084313912
     def _get_treatment_dental_plan_type(self) -> TreatmentType:
         endpoint = f'{api_base_url}/CredenciadoDental/Prestador/Especialidades/Operadora/Prestador/{self.username}'
         response = self.session.get(endpoint)

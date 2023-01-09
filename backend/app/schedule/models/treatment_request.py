@@ -22,6 +22,9 @@ class TreatmentRequestStatus(TextChoices):
     READY = 'READY', _('Ready')
     REQUESTED = 'REQUESTED', _('Requested')
     CANCELED = 'CANCELED', _('Canceled')
+    SUBMITTING = 'SUBMITTING', _('Submitting')
+    SUBMITTED = 'SUBMITTED', _('Submitted')
+    SUBMIT_FAIL = 'SUBMIT_FAIL', _('Submit Fail')
 
 
 class TreatmentRequest(TimeStampedModel):

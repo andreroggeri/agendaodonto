@@ -49,11 +49,11 @@ def fetch_dental_plan_data(self, treatment_request_id):
         amil.authenticate(dentist.amil_password)
         data = amil.fetch_dental_plan_data(treatment_request.dental_plan_card_number)
 
-        treatment_request.patient_gender = data['gender']
-        treatment_request.patient_first_name = data['first_name']
-        treatment_request.patient_last_name = data['last_name']
-        treatment_request.patient_birth_date = data['birth_date']
-        treatment_request.patient_cpf_hash = bcrypt.hashpw(data['cpf'].encode(), bcrypt.gensalt()).decode('utf-8')
+        treatment_request.patient_gender = data.gender
+        treatment_request.patient_first_name = data.first_name
+        treatment_request.patient_last_name = data.last_name
+        treatment_request.patient_birth_date = data.birth_date
+        treatment_request.patient_cpf_hash = bcrypt.hashpw(data.cpf.encode(), bcrypt.gensalt()).decode('utf-8')
         patient = Patient.objects.filter(dental_plan_card_number=treatment_request.dental_plan_card_number).first()
         if patient:
             treatment_request.patient = patient
@@ -64,4 +64,22 @@ def fetch_dental_plan_data(self, treatment_request_id):
     except Exception as ex:
         logger.error('Failed to fetch dental plan data', exc_info=ex)
         treatment_request.status = TreatmentRequestStatus.DATA_FETCH_FAIL
+        treatment_request.save()
+
+
+@celery_app.task(bind=True)
+def submit_basic_treatment_request(self, treatment_request_id):
+    treatment_request = TreatmentRequest.objects.get(id=treatment_request_id)
+    try:
+        dentist = Dentist.objects.get(phone__exact=treatment_request.dentist_phone)
+
+        amil: BaseAmilService = load_class_dynamically(settings.AMIL_SERVICE)(dentist.amil_username)
+        amil.authenticate(dentist.amil_password)
+        result = amil.request_basic_treatment(treatment_request.dental_plan_card_number)
+        treatment_request.status = TreatmentRequestStatus.SUBMITTED
+        treatment_request.save()
+        return result
+    except Exception as ex:
+        logger.error('Failed to submit basic treatment request', exc_info=ex)
+        treatment_request.status = TreatmentRequestStatus.SUBMIT_FAIL
         treatment_request.save()
