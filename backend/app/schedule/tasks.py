@@ -3,6 +3,7 @@ import logging
 
 import bcrypt
 from django.conf import settings
+from requests import HTTPError
 
 from app.schedule.celery import celery_app
 from app.schedule.models import Schedule, Dentist, Patient
@@ -35,7 +36,8 @@ def send_message(self, schedule_id):
         schedule.save()
 
         return result
-    except TimeoutError as e:
+    except (TimeoutError, HTTPError) as e:
+        logger.error(f'Failed to send message to schedule "{schedule_id}"', exc_info=e)
         self.retry(exc=e, max_retries=settings.CELERY_TASK_MAX_RETRY, countdown=60 * 5)
 
 
