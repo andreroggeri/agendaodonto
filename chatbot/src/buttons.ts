@@ -2,7 +2,8 @@ import * as messages from './messages';
 import { Messenger } from './messaging/messenger';
 
 export enum ConversationState {
-  GatheringAmilCard = 'GatheringImage',
+  GatheringAmilCard = 'GatheringAmilCard',
+  GatheringInterondontoCard = 'GatheringInterodontoCard',
   Final = 'Final',
   ButtonFlow = 'ButtonFlow',
 }
@@ -33,7 +34,7 @@ export type FlowName =
   | 'queryAmilInsuranceCard'
   | 'queryInterodontoInsuranceCard'
   | 'queryAmilSchedulePeriod'
-  | 'queryInterodontoSchedulePeriod'
+  | 'queryInterodontoSchedulePeriod';
 
 function buildFlows(): Record<FlowName, WhatsappChatFlow> {
   const flows: Partial<Record<FlowName, WhatsappChatFlow>> = {
@@ -45,7 +46,7 @@ function buildFlows(): Record<FlowName, WhatsappChatFlow> {
     queryInterodontoInsuranceCard: {
       message: messages.queryInsuranceCard,
       buttons: [],
-      state: ConversationState.Final,
+      state: ConversationState.GatheringInterondontoCard,
     },
     scheduleSuccesFlow: {
       message: messages.scheduleSuccessFlowEnded,
@@ -84,7 +85,7 @@ function buildFlows(): Record<FlowName, WhatsappChatFlow> {
       { text: 'Tarde', nextFlow: 'queryInterodontoInsuranceCard' },
     ],
     state: ConversationState.ButtonFlow,
-  }
+  };
 
   flows.privateScheduleFlow = {
     message: messages.privateScheduleInformation,
