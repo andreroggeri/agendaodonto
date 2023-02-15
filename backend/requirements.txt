@@ -1,4 +1,4 @@
-Django==3.2.16
+Django==3.2.18
 django-cors-headers==3.13.0
 django-crispy-forms==1.14.0
 django-filter==21.1
