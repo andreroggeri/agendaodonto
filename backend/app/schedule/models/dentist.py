@@ -80,6 +80,8 @@ class Dentist(AbstractBaseUser):
     device_token = CharField('Token do dispositivo', max_length=255, default=None, null=True)
     amil_username = CharField('Usuário AMIL', max_length=255, default=None, null=True)
     amil_password = CharField('Senha AMIL', max_length=255, default=None, null=True)
+    interodonto_username = CharField('Usuário Interodonto', max_length=255, default=None, null=True)
+    interodonto_password = CharField('Senha Interodonto', max_length=255, default=None, null=True)
 
     def get_full_name(self):
         return self.first_name + " " + self.last_name

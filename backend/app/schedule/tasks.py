@@ -1,7 +1,6 @@
 import importlib
 import logging
 
-import bcrypt
 from django.conf import settings
 from requests import HTTPError
 
@@ -9,6 +8,7 @@ from app.schedule.celery import celery_app
 from app.schedule.models import Schedule, Dentist, Patient
 from app.schedule.models.treatment_request import TreatmentRequest, TreatmentRequestStatus
 from app.schedule.service.dental_plan.amil import BaseAmilService
+from app.schedule.service.dental_plan.interodonto import BaseInterodontoService
 from app.schedule.service.notification.base import BaseNotificationService
 
 logger = logging.getLogger(__name__)
@@ -51,15 +51,23 @@ def fetch_dental_plan_data(self, treatment_request_id):
     try:
         dentist = Dentist.objects.get(phone__exact=treatment_request.dentist_phone)
 
-        amil: BaseAmilService = load_class_dynamically(settings.AMIL_SERVICE)(dentist.amil_username)
-        amil.authenticate(dentist.amil_password)
-        data = amil.fetch_dental_plan_data(treatment_request.dental_plan_card_number)
+        if 'amil' in treatment_request.dental_plan.name.lower():
+            amil: BaseAmilService = load_class_dynamically(settings.AMIL_SERVICE)(dentist.amil_username)
+            amil.authenticate(dentist.amil_password)
+            data = amil.fetch_dental_plan_data(treatment_request.dental_plan_card_number)
+        elif 'interodonto' in treatment_request.dental_plan.name.lower():
+            interodonto: BaseInterodontoService = load_class_dynamically(settings.INTERODONTO_SERVICE)(
+                dentist.interodonto_username)
+            interodonto.authenticate(dentist.interodonto_password)
+            data = interodonto.fetch_dental_plan_data(treatment_request.dental_plan_card_number)
+        else:
+            raise NotImplementedError(f'No service for dental plan {treatment_request.dental_plan.name}')
 
-        treatment_request.patient_gender = data.gender
         treatment_request.patient_first_name = data.first_name
         treatment_request.patient_last_name = data.last_name
         treatment_request.patient_birth_date = data.birth_date
-        treatment_request.patient_cpf_hash = bcrypt.hashpw(data.cpf.encode(), bcrypt.gensalt()).decode('utf-8')
+        treatment_request.patient_age = data.age
+        treatment_request.patient_gender = data.gender
         patient = Patient.objects.filter(dental_plan_card_number=treatment_request.dental_plan_card_number).first()
         if patient:
             treatment_request.patient = patient
@@ -79,9 +87,18 @@ def submit_basic_treatment_request(self, treatment_request_id):
     try:
         dentist = Dentist.objects.get(phone__exact=treatment_request.dentist_phone)
 
-        amil: BaseAmilService = load_class_dynamically(settings.AMIL_SERVICE)(dentist.amil_username)
-        amil.authenticate(dentist.amil_password)
-        result = amil.request_basic_treatment(treatment_request.dental_plan_card_number)
+        if 'amil' in treatment_request.dental_plan.name.lower():
+            amil: BaseAmilService = load_class_dynamically(settings.AMIL_SERVICE)(dentist.amil_username)
+            amil.authenticate(dentist.amil_password)
+            result = amil.request_basic_treatment(treatment_request.dental_plan_card_number)
+        elif 'interodonto' in treatment_request.dental_plan.name.lower():
+            interodonto: BaseInterodontoService = load_class_dynamically(settings.INTERODONTO_SERVICE)(
+                dentist.interodonto_username)
+            interodonto.authenticate(dentist.interodonto_password)
+            result = interodonto.request_basic_treatment(treatment_request.dental_plan_card_number)
+        else:
+            raise NotImplementedError(f'No service for dental plan {treatment_request.dental_plan.name}')
+
         treatment_request.status = TreatmentRequestStatus.SUBMITTED
         treatment_request.save()
         return result
