@@ -41,5 +41,6 @@ class TreatmentRequest(TimeStampedModel):
     patient_birth_date = DateField('Data de nascimento do paciente', default=None, null=True, blank=True)
     patient_cpf_hash = CharField('CPF do paciente', max_length=64, default=None, null=True, blank=True)
     patient_gender = CharField('Gênero do paciente', max_length=1, default=None, null=True, blank=True)
+    patient_age = IntegerField('Idade do paciente', default=None, null=True, blank=True)
 
     patient = ForeignKey(Patient, on_delete=models.CASCADE, default=None, null=True, blank=True)
