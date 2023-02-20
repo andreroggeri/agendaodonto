@@ -1,4 +1,9 @@
-import { randFirstName, randLastName, randPhoneNumber } from '@ngneat/falso';
+import {
+    randFirstName,
+    randLastName,
+    randNumber,
+    randPhoneNumber,
+} from '@ngneat/falso';
 import { IPatientResponse } from '../../interfaces/services/patient.model';
 import { BaseDatabase } from './base.database';
 import { ClinicDatabase } from './clinic.database';
@@ -17,6 +22,7 @@ export class PatientDatabase extends BaseDatabase<IPatientResponse> {
             phone: randPhoneNumber(),
             clinic: this.clinicDatabase.get(),
             dental_plan: this.dentalPlanDatabase.get(),
+            dental_plan_card_number: randNumber({ length: 15 }).toString(),
         };
         return patient;
     }

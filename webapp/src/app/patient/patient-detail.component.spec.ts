@@ -108,6 +108,7 @@ describe('PatientDetailComponent', () => {
             sex: patient.sex,
             clinic: patient.clinic,
             dental_plan: patient.dental_plan,
+            dental_plan_card_number: patient.dental_plan_card_number
         });
     });
 
