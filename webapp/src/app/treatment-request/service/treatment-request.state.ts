@@ -61,6 +61,8 @@ export class TreatmentRequestStateService {
     }
 
     fetchTreatmentRequests(filter?: BaseFilter) {
+        const requestFilter = filter || new BaseFilter();
+        requestFilter.setFilterValue('orderBy', '-id');
         this.state.next({
             ...this.current,
             loading: true,
@@ -68,7 +70,7 @@ export class TreatmentRequestStateService {
         });
 
         this.service
-            .list(filter)
+            .list(requestFilter)
             .pipe(
                 catchError(() => {
                     this.state.next({
