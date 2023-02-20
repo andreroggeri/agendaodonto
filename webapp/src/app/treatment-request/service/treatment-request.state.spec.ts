@@ -23,7 +23,6 @@ describe('TreatmentRequestStateService', () => {
     const treatmentRequestDb = new TreatmentRequestDatabase();
     const patientDb = new PatientDatabase();
 
-    const patients = patientDb.getAsResponse(5);
     const treatmentRequests = treatmentRequestDb.getAsResponse(5);
 
     let service: TreatmentRequestStateService;
@@ -132,7 +131,7 @@ describe('TreatmentRequestStateService', () => {
 
             const row = service.current.treatmentRequests[1];
 
-            treatmentRequestService._spy.update._func.and.returnValue(
+            treatmentRequestService._spy.patch._func.and.returnValue(
                 of({
                     ...row.data,
                     status: TreatmentRequestStatus.READY,
@@ -191,7 +190,7 @@ describe('TreatmentRequestStateService', () => {
 
             const row = service.current.treatmentRequests[1];
 
-            treatmentRequestService._spy.update._func.and.returnValue(
+            treatmentRequestService._spy.patch._func.and.returnValue(
                 throwError('failed'),
             );
 
@@ -253,7 +252,7 @@ describe('TreatmentRequestStateService', () => {
 
             const row = service.current.treatmentRequests[1];
 
-            treatmentRequestService._spy.update._func.and.returnValue(
+            treatmentRequestService._spy.patch._func.and.returnValue(
                 of({
                     ...row.data,
                     status: TreatmentRequestStatus.READY,

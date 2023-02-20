@@ -109,7 +109,7 @@ export class DashboardComponent implements OnInit {
         this.refSchedules = this.scheduleService.getAll(scheduleFilter);
         // Pending Treatment Requests
         const treatmentRequestFilter = new TreatmentRequestFilter();
-        treatmentRequestFilter.setFilterValue('status', 'PENDING');
+        treatmentRequestFilter.setFilterValue('status', 'READY');
         this.pendingTreatmentRequests = this.treatmentRequestService.list(
             treatmentRequestFilter,
         );
