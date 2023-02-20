@@ -14,10 +14,14 @@ import { vision } from './vision';
 async function handleMessage(client: Messenger, from: string, content: string) {
   const context = await loadContext(from);
   console.log(context);
+  if (content.includes('!reset')) {
+    await client.sendMessage(from, 'Okay!');
+    context.setCurrentFlow('initialFlow');
+    await context.save();
+  }
   if (content.includes('!ping')) {
     console.log('replying', { from });
     await client.sendMessage(from, 'pong');
-    await client.sendButtons(from, flows.initialFlow.message, flows.initialFlow.buttons);
   }
 
   if (context.isLastInteractionTooOld) {
