@@ -104,12 +104,11 @@ export class TreatmentRequestStateService {
     ) {
         this.updateRow(row, { loading: true });
 
-        const data: ITreatmentRequestResponse = {
-            ...row.data,
-            status,
-        };
         this.service
-            .update(data)
+            .patch({
+                id: row.data.id,
+                status,
+            })
             .pipe(
                 catchError(() => {
                     return of(row.data);

@@ -33,6 +33,10 @@ export abstract class CrudService<T> extends BaseService {
         return this.http.put<T>(this.url([this.endpoint, data.id]), data);
     }
 
+    patch(data: Partial<T> & { id: number }): Observable<T> {
+        return this.http.patch<T>(this.url([this.endpoint, data.id]), data);
+    }
+
     delete(data: CreatedEntity<T>): Observable<T> {
         return this.http.delete<T>(this.url([this.endpoint, data.id]));
     }
