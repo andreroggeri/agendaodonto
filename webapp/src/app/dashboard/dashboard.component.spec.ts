@@ -54,6 +54,7 @@ describe('DashboardComponent', () => {
         scheduleService = MockFactory.create(ScheduleService);
         patientService = MockFactory.create(PatientService);
         dentalPlanService = MockFactory.create(DentalPlanService);
+        treatmentRequestService = MockFactory.create(TreatmentRequestService);
 
         fixture = TestBed.createComponent(DashboardComponent);
         component = fixture.componentInstance;

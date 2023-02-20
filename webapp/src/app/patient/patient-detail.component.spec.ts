@@ -52,11 +52,13 @@ describe('PatientDetailComponent', () => {
             providers: [
                 { provide: PatientService, useFactory: () => patientService },
                 { provide: ClinicService, useFactory: () => clinicService },
-                { provide: DentalPlanService, useFactory: () => dentalPlanService },
+                {
+                    provide: DentalPlanService,
+                    useFactory: () => dentalPlanService,
+                },
                 { provide: ActivatedRoute, useFactory: () => route },
             ],
         });
-
     });
 
     beforeEach(() => {
@@ -80,7 +82,9 @@ describe('PatientDetailComponent', () => {
         const dentalPlansResponse = dentalPlanDb.getAsResponse(5);
 
         clinicService._spy.getAll._func.and.returnValue(of(clinicsResponse));
-        dentalPlanService._spy.getAll._func.and.returnValue(of(dentalPlansResponse));
+        dentalPlanService._spy.getAll._func.and.returnValue(
+            of(dentalPlansResponse),
+        );
         route._spy.snapshot._get.and.returnValue({ params: { id: null } });
 
         fixture.detectChanges();
@@ -91,8 +95,12 @@ describe('PatientDetailComponent', () => {
 
     it('should load the patient data if an id is provided via URL', () => {
         const patient = patientDb.get();
-        clinicService._spy.getAll._func.and.returnValue(of(clinicDb.getAsResponse(5)));
-        dentalPlanService._spy.getAll._func.and.returnValue(of(dentalPlanDb.getAsResponse(5)));
+        clinicService._spy.getAll._func.and.returnValue(
+            of(clinicDb.getAsResponse(5)),
+        );
+        dentalPlanService._spy.getAll._func.and.returnValue(
+            of(dentalPlanDb.getAsResponse(5)),
+        );
         patientService._spy.get._func.and.returnValue(of(patient));
         route._spy.snapshot._get.and.returnValue({ params: { id: 10 } });
 
@@ -108,14 +116,18 @@ describe('PatientDetailComponent', () => {
             sex: patient.sex,
             clinic: patient.clinic,
             dental_plan: patient.dental_plan,
-            dental_plan_card_number: patient.dental_plan_card_number
+            dental_plan_card_number: patient.dental_plan_card_number,
         });
     });
 
     it('should navigate to schedule when the schedule detail is clicked', () => {
         const schedules = scheduleDb.getAsResponse(5);
-        clinicService._spy.getAll._func.and.returnValue(of(clinicDb.getAsResponse(5)));
-        dentalPlanService._spy.getAll._func.and.returnValue(of(dentalPlanDb.getAsResponse(5)));
+        clinicService._spy.getAll._func.and.returnValue(
+            of(clinicDb.getAsResponse(5)),
+        );
+        dentalPlanService._spy.getAll._func.and.returnValue(
+            of(dentalPlanDb.getAsResponse(5)),
+        );
         patientService._spy.get._func.and.returnValue(of(patientDb.get()));
         patientService._spy.getSchedules._func.and.returnValue(of(schedules));
 
@@ -126,7 +138,8 @@ describe('PatientDetailComponent', () => {
         fixture.detectChanges();
 
         const table = fixture.debugElement.query(By.css('table'));
-        const rows: HTMLElement[] = table.nativeElement.querySelectorAll('tbody tr');
+        const rows: HTMLElement[] =
+            table.nativeElement.querySelectorAll('tbody tr');
 
         rows[0].click();
 
