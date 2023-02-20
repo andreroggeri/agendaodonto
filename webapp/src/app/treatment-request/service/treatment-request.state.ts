@@ -152,6 +152,7 @@ export class TreatmentRequestStateService {
             name: row.data.patient_first_name,
             last_name: row.data.patient_last_name,
             phone: row.data.patient_phone,
+            dental_plan: row.data.dental_plan,
             dental_plan_card_number: row.data.dental_plan_card_number,
         };
         this.patientService.update(updatedPatient).subscribe(
