@@ -5,6 +5,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { Mock, MockFactory } from 'jasmine-mock-factory';
 import { configureTestSuite } from 'ng-bullet';
+import { TreatmentRequestService } from 'src/app/treatment-request/service/treatment-request.service';
 
 import { DentalPlanService } from '../dental-plan/dental-plan.service';
 import { PatientService } from '../patient/patient.service';
@@ -20,6 +21,7 @@ describe('DashboardComponent', () => {
     let scheduleService: Mock<ScheduleService>;
     let patientService: Mock<PatientService>;
     let dentalPlanService: Mock<DentalPlanService>;
+    let treatmentRequestService: Mock<TreatmentRequestService>;
 
     configureTestSuite(() => {
         TestBed.configureTestingModule({
@@ -36,7 +38,14 @@ describe('DashboardComponent', () => {
             providers: [
                 { provide: ScheduleService, useFactory: () => scheduleService },
                 { provide: PatientService, useFactory: () => patientService },
-                { provide: DentalPlanService, useFactory: () => dentalPlanService },
+                {
+                    provide: DentalPlanService,
+                    useFactory: () => dentalPlanService,
+                },
+                {
+                    provide: TreatmentRequestService,
+                    useFactory: () => treatmentRequestService,
+                },
             ],
         });
     });
@@ -45,6 +54,7 @@ describe('DashboardComponent', () => {
         scheduleService = MockFactory.create(ScheduleService);
         patientService = MockFactory.create(PatientService);
         dentalPlanService = MockFactory.create(DentalPlanService);
+        treatmentRequestService = MockFactory.create(TreatmentRequestService);
 
         fixture = TestBed.createComponent(DashboardComponent);
         component = fixture.componentInstance;

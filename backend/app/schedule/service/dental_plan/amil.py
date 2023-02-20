@@ -3,10 +3,11 @@ from typing import List
 
 import requests
 
-from app.schedule.service.dental_plan.types.amil_card_information import AmilDentalPlanInformation
-from app.schedule.service.dental_plan.types.service_provider import ServiceProviderResponse
-from app.schedule.service.dental_plan.types.treatment_adress import TreatmentAddressResponse
-from app.schedule.service.dental_plan.types.treatment_type import TreatmentType
+from app.schedule.service.dental_plan.response_types.amil.amil_card_data import AmilCardData
+from app.schedule.service.dental_plan.response_types.amil.service_provider import ServiceProviderResponse
+from app.schedule.service.dental_plan.response_types.amil.treatment_adress import TreatmentAddressResponse
+from app.schedule.service.dental_plan.response_types.amil.treatment_type import TreatmentType
+from app.schedule.service.dental_plan.response_types.dental_plan_card_data import DentalPlanCardData
 
 api_base_url = 'https://www.amil.com.br/credenciado-dental/api'
 auth_url = 'https://www.amil.com.br/credenciado-dental/Login'
@@ -20,7 +21,7 @@ class BaseAmilService:
     def authenticate(self, password: str) -> None:
         raise NotImplementedError
 
-    def fetch_dental_plan_data(self, card_number: str) -> AmilDentalPlanInformation:
+    def fetch_dental_plan_data(self, card_number: str) -> DentalPlanCardData:
         raise NotImplementedError
 
     def request_basic_treatment(self, card_number: str) -> dict:
@@ -32,11 +33,10 @@ class AmilFakeService(BaseAmilService):
     def authenticate(self, password: str) -> None:
         pass
 
-    def fetch_dental_plan_data(self, card_number: str) -> AmilDentalPlanInformation:
-        return AmilDentalPlanInformation(**{
+    def fetch_dental_plan_data(self, card_number: str) -> DentalPlanCardData:
+        return DentalPlanCardData(**{
             'first_name': 'John',
             'last_name': 'Doe',
-            'cpf': '12345678910',
             'birth_date': datetime.date(1990, 1, 1),
             'gender': 'M',
         })
@@ -57,7 +57,7 @@ class AmilService(BaseAmilService):
         token = response.json()['token']
         self.session.headers.update({'Authorization': f'Bearer {token}'})
 
-    def fetch_dental_plan_data(self, card_number: str) -> AmilDentalPlanInformation:
+    def fetch_dental_plan_data(self, card_number: str) -> AmilCardData:
         """Fetch dental plan data from Amil API."""
         url = f'{api_base_url}/CredenciadoDental/Beneficiario/Elegibilidade/Prestador/{self.username}/MarcaOtica/{card_number}'
 
@@ -77,10 +77,9 @@ class AmilService(BaseAmilService):
         gender = 'M' if beneficiary['beneficiario']['sexo'] == 'MASCULINO' else 'F'
         plan_name = beneficiary['plano']['nomePlanoCartao']
         full_name = beneficiary['beneficiario']['nome']
-        return AmilDentalPlanInformation(**{
+        return AmilCardData(**{
             'first_name': first_name,
             'last_name': last_name,
-            'cpf': beneficiary.get('cpf', ''),
             'birth_date': birth_date,
             'gender': gender,
             'plan_name': plan_name,
@@ -187,6 +186,7 @@ class AmilService(BaseAmilService):
         response.raise_for_status()
 
         return response.json()
+
     # /credenciado-dental/api/CredenciadoDental/PlanoTratamento/SolicitaLiberacao/MarcaOtica/084313912
     def _get_treatment_dental_plan_type(self) -> TreatmentType:
         endpoint = f'{api_base_url}/CredenciadoDental/Prestador/Especialidades/Operadora/Prestador/{self.username}'

@@ -23,6 +23,7 @@ services:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
       - DATABASE_URL=postgres://postgres:postgres@db:5432/dev_db
       - DJANGO_SECRET_KEY=SOME_KEY
+      - API_KEY=fake-key
     ports:
       - "8000:8000"
     depends_on:

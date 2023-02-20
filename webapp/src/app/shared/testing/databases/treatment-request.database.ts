@@ -10,6 +10,7 @@ import {
     ITreatmentRequestResponse,
     TreatmentRequestStatus,
 } from 'src/app/shared/interfaces/services/treatment-request.response';
+import { DentalPlanDatabase } from 'src/app/shared/testing/databases/dental-plan.database';
 
 import { BaseDatabase } from './base.database';
 
@@ -18,7 +19,7 @@ export class TreatmentRequestDatabase extends BaseDatabase<ITreatmentRequestResp
         return {
             id: randNumber(),
             dental_plan_card_number: randNumber().toString(),
-            dental_plan: randNumber(),
+            dental_plan: new DentalPlanDatabase().get(),
             patient_phone: randPhoneNumber(),
             dentist_phone: randPhoneNumber(),
             status: rand(Object.values(TreatmentRequestStatus)),

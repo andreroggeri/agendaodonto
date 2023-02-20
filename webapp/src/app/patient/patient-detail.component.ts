@@ -65,6 +65,7 @@ export class PatientDetailComponent extends BaseComponent implements OnInit {
             sex: ['', Validators.required],
             clinic: ['', Validators.required],
             dental_plan: ['', Validators.required],
+            dental_plan_card_number: [''],
         });
     }
 
@@ -115,6 +116,7 @@ export class PatientDetailComponent extends BaseComponent implements OnInit {
                     sex: response.sex,
                     clinic: response.clinic,
                     dental_plan: response.dental_plan,
+                    dental_plan_card_number: response.dental_plan_card_number,
                 });
             });
     }

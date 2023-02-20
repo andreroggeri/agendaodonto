@@ -1,6 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 
 from app.schedule.models.treatment_request import TreatmentRequest
+from app.schedule.serializers.dental_plan import DentalPlanSerializer
 from app.schedule.tasks import fetch_dental_plan_data
 
 
@@ -25,3 +26,7 @@ class TreatmentRequestSerializer(ModelSerializer):
         treatment_request = super().create(validated_data)
         fetch_dental_plan_data.delay(treatment_request.id)
         return treatment_request
+
+
+class TreatmentRequestListSerializer(TreatmentRequestSerializer):
+    dental_plan = DentalPlanSerializer(read_only=True)

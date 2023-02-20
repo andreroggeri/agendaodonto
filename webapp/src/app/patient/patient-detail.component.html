@@ -39,6 +39,12 @@
                 </mat-select>
             </mat-form-field>
         </div>
+        <div fxLayout="row">
+            <mat-form-field fxFlex="50">
+                <input matInput placeholder="Número da carteirinha" formControlName="dental_plan_card_number" maxlength="50">
+                <mat-error>{{ patientForm.getControlMessages('dental_plan_card_number') }}</mat-error>
+            </mat-form-field>
+        </div>
         <div class="app-actions" fxLayoutGap="10px" fxLayoutAlign="end center">
             <button type="button" mat-raised-button color="warn" *ngIf="patientForm.controls.id.value != ''"
                 (click)="onDelete()" [appBtnLoader]="isSubmitting">

@@ -1,10 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { NavigationExtras, Router } from '@angular/router';
 import * as d3 from 'd3';
-import { addMonths, endOfMonth, format, isAfter, isBefore, startOfMonth, subMonths } from 'date-fns';
+import {
+    addMonths,
+    endOfMonth,
+    format,
+    isAfter,
+    isBefore,
+    startOfMonth,
+    subMonths,
+} from 'date-fns';
 import * as ptLocale from 'date-fns/locale/pt';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ITreatmentRequestResponse } from 'src/app/shared/interfaces/services/treatment-request.response';
+import { TreatmentRequestFilter } from 'src/app/treatment-request/service/treatment-request.filter';
+import { TreatmentRequestService } from 'src/app/treatment-request/service/treatment-request.service';
 
 import { DentalPlanService } from '../dental-plan/dental-plan.service';
 import { PatientFilter } from '../patient/patient.filter';
@@ -22,8 +33,10 @@ import { parseAttendanceData } from './dashboard.utils';
     styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit {
-
     pendingSchedules: Observable<IPaginatedResponse<IScheduleResponse>>;
+    pendingTreatmentRequests: Observable<
+        IPaginatedResponse<ITreatmentRequestResponse>
+    >;
     refSchedules: Observable<IPaginatedResponse<IScheduleResponse>>;
     patients: Observable<IPaginatedResponse<IPatientResponse>>;
     attendance: Observable<any>;
@@ -61,7 +74,8 @@ export class DashboardComponent implements OnInit {
         private patientService: PatientService,
         private router: Router,
         private dentalPlanService: DentalPlanService,
-    ) { }
+        private treatmentRequestService: TreatmentRequestService,
+    ) {}
 
     ngOnInit() {
         this.setupObservables();
@@ -71,7 +85,7 @@ export class DashboardComponent implements OnInit {
         if (n2 === 0) {
             return 0;
         }
-        return Math.round(((n1 / n2) - 1) * 100);
+        return Math.round((n1 / n2 - 1) * 100);
     }
 
     setupObservables() {
@@ -83,27 +97,48 @@ export class DashboardComponent implements OnInit {
         // Pending Schedules
         const scheduleFilter = new ScheduleFilter();
         scheduleFilter.setFilterValue('pageSize', '1');
-        scheduleFilter.setFilterValue('endDate', format(new Date(), 'YYYY-MM-DD'));
+        scheduleFilter.setFilterValue(
+            'endDate',
+            format(new Date(), 'YYYY-MM-DD'),
+        );
         scheduleFilter.setFilterValue('status', '0');
         this.pendingSchedules = this.scheduleService.getAll(scheduleFilter);
         // Schedules
         scheduleFilter.setFilterValue('startDate', this.refStartDate);
         scheduleFilter.setFilterValue('endDate', this.refEndDate);
         this.refSchedules = this.scheduleService.getAll(scheduleFilter);
+        // Pending Treatment Requests
+        const treatmentRequestFilter = new TreatmentRequestFilter();
+        treatmentRequestFilter.setFilterValue('status', 'READY');
+        this.pendingTreatmentRequests = this.treatmentRequestService.list(
+            treatmentRequestFilter,
+        );
+
         // Attendance
         this.attendance = this.scheduleService
-            .getAttendanceData(this.currentDate).pipe(
-                map(data => {
+            .getAttendanceData(this.currentDate)
+            .pipe(
+                map((data) => {
                     return parseAttendanceData(data);
-                }));
+                }),
+            );
 
         this.attendanceRatio = this.scheduleService.getAttendanceData();
 
-        this.dentalPlanStats = this.dentalPlanService.getStats(startOfMonth(this.currentDate), endOfMonth(this.currentDate))
+        this.dentalPlanStats = this.dentalPlanService
+            .getStats(
+                startOfMonth(this.currentDate),
+                endOfMonth(this.currentDate),
+            )
             .pipe(
-                map(values => values.map(v => {
-                    return { name: v.dental_plan || 'Sem Plano', value: v.count };
-                })),
+                map((values) =>
+                    values.map((v) => {
+                        return {
+                            name: v.dental_plan || 'Sem Plano',
+                            value: v.count,
+                        };
+                    }),
+                ),
             );
     }
 
@@ -123,6 +158,10 @@ export class DashboardComponent implements OnInit {
             dataFim: format(endOfMonth(this.currentDate), 'DD-MM-YYYY'),
         };
         this.router.navigate(['/agenda/lista'], extras);
+    }
+
+    viewPendingTreatmentRequests() {
+        this.router.navigate(['/solicitacao-tratamento']);
     }
 
     viewPatients() {

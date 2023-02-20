@@ -14,10 +14,13 @@ import { vision } from './vision';
 async function handleMessage(client: Messenger, from: string, content: string) {
   const context = await loadContext(from);
   console.log(context);
+  if (content.includes('!reset')) {
+    await client.sendMessage(from, 'Okay!');
+    await context.reset();
+  }
   if (content.includes('!ping')) {
     console.log('replying', { from });
     await client.sendMessage(from, 'pong');
-    await client.sendButtons(from, flows.initialFlow.message, flows.initialFlow.buttons);
   }
 
   if (context.isLastInteractionTooOld) {
@@ -54,20 +57,38 @@ async function handleImage(client: Messenger, from: string, image: Buffer) {
 
     const flow = context.getCurrentFlow();
 
-    if (flow.state !== ConversationState.GatheringAmilCard) {
-      console.log('Received image but not expecting one');
+    if (![ConversationState.GatheringAmilCard, ConversationState.GatheringInterondontoCard].includes(flow.state)) {
+      console.log('Received image but not expecting one', { state: flow.state, from });
       return;
     }
 
     const [result] = await vision.textDetection(image);
-    const cardNumberMatch = result.fullTextAnnotation?.text?.replace(/ /g, '').match(/\d{9}\n/g);
+    let cardNumberMatch: RegExpMatchArray | null | undefined;
+    let dentalPlanName: string;
+    switch (flow.state) {
+      case ConversationState.GatheringAmilCard:
+        cardNumberMatch = result.fullTextAnnotation?.text?.replace(/ /g, '').match(/\d{9}\n/g);
+        dentalPlanName = 'amil';
+        break;
+      case ConversationState.GatheringInterondontoCard:
+        dentalPlanName = 'interodonto';
+        cardNumberMatch = result.fullTextAnnotation?.text
+          ?.split('\n')
+          .map((t) => t.replace(/[^0-9]+/g, ''))
+          .filter((t) => t.length === 23);
+        break;
+      default:
+        throw new Error('Invalid state');
+    }
+
     console.log({ result: result.fullTextAnnotation?.text?.replace(/ /g, '') });
     if (cardNumberMatch) {
       const found = [...cardNumberMatch].map((c) => c.trim());
       console.log('Found card numbers: ', { foundCardNumbers: found });
-      const dentalPlan = await apiService.findDentalPlanByName('amil');
+      const dentalPlan = await apiService.findDentalPlanByName(dentalPlanName);
 
       for (const cardNumber of found) {
+        console.log('Creating treatment request', { cardNumber, dentalPlan });
         await apiService.createTreatmentRequest({
           dental_plan: dentalPlan.id,
           dental_plan_card_number: cardNumber,

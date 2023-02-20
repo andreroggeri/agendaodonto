@@ -61,6 +61,8 @@ export class TreatmentRequestStateService {
     }
 
     fetchTreatmentRequests(filter?: BaseFilter) {
+        const requestFilter = filter || new BaseFilter();
+        requestFilter.setFilterValue('orderBy', '-id');
         this.state.next({
             ...this.current,
             loading: true,
@@ -68,7 +70,7 @@ export class TreatmentRequestStateService {
         });
 
         this.service
-            .list(filter)
+            .list(requestFilter)
             .pipe(
                 catchError(() => {
                     this.state.next({
@@ -102,12 +104,11 @@ export class TreatmentRequestStateService {
     ) {
         this.updateRow(row, { loading: true });
 
-        const data: ITreatmentRequestResponse = {
-            ...row.data,
-            status,
-        };
         this.service
-            .update(data)
+            .patch({
+                id: row.data.id,
+                status,
+            })
             .pipe(
                 catchError(() => {
                     return of(row.data);
@@ -131,10 +132,7 @@ export class TreatmentRequestStateService {
                 dentists: [],
                 name: '',
             },
-            dental_plan: {
-                name: '',
-                id: row.data.dental_plan,
-            },
+            dental_plan: row.data.dental_plan,
             dental_plan_card_number: row.data.dental_plan_card_number,
         };
         this.patientService.create(patient).subscribe(

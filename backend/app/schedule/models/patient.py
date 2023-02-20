@@ -31,4 +31,3 @@ class Patient(TimeStampedModel):
     dental_plan = ForeignKey(DentalPlan, default=None, null=True, blank=True, on_delete=CASCADE)
     dental_plan_card_number = models.CharField('Número da carteirinha', max_length=50, default=None, null=True,
                                                blank=True, unique=True)
-    # cpf_hash = models.CharField('CPF', max_length=64, default=None, null=True, blank=True)
