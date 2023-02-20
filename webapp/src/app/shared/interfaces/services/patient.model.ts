@@ -8,6 +8,6 @@ export interface IPatientResponse {
     sex: string;
     phone: string;
     clinic: IClinicResponse;
-    dental_plan: IDentalPlanResponse;
+    dental_plan?: IDentalPlanResponse;
     dental_plan_card_number?: string;
 }
