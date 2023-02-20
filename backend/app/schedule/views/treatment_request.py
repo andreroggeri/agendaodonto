@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from app.schedule.models.treatment_request import TreatmentRequest, TreatmentRequestStatus
 from app.schedule.permissions.api_key_permission import IsApiKeyValid
-from app.schedule.serializers.treatment_request import TreatmentRequestSerializer
+from app.schedule.serializers.treatment_request import TreatmentRequestSerializer, TreatmentRequestListSerializer
 from app.schedule.tasks import submit_basic_treatment_request
 
 
@@ -24,8 +24,13 @@ class TreatmentRequestList(ListCreateAPIView):
     Lista de solicitações de tratamento
     """
     permission_classes = (permissions.IsAuthenticated | IsApiKeyValid,)
-    serializer_class = TreatmentRequestSerializer
     filter_class = TreatmentRequestFilter
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TreatmentRequestListSerializer
+        else:
+            return TreatmentRequestSerializer
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:
