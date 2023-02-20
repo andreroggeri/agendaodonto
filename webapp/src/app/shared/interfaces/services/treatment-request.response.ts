@@ -1,3 +1,5 @@
+import { IDentalPlanResponse } from 'src/app/shared/interfaces/services/denta-plan.model';
+
 export enum TreatmentRequestStatus {
     PENDING = 'PENDING',
     DATA_FETCHED_NEW_PATIENT = 'DATA_FETCHED_NEW_PATIENT',
@@ -12,7 +14,7 @@ export enum TreatmentRequestStatus {
 export interface ITreatmentRequestResponse {
     id: number;
     dental_plan_card_number: string;
-    dental_plan: number;
+    dental_plan: IDentalPlanResponse;
     patient_phone: string;
     dentist_phone: string;
     status: TreatmentRequestStatus;

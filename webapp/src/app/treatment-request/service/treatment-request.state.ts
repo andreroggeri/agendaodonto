@@ -133,10 +133,7 @@ export class TreatmentRequestStateService {
                 dentists: [],
                 name: '',
             },
-            dental_plan: {
-                name: '',
-                id: row.data.dental_plan,
-            },
+            dental_plan: row.data.dental_plan,
             dental_plan_card_number: row.data.dental_plan_card_number,
         };
         this.patientService.create(patient).subscribe(

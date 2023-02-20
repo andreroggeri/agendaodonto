@@ -14,6 +14,13 @@
             *ngIf="!(loading$ | async)"
             [dataSource]="rows$ | async"
         >
+            <ng-container matColumnDef="planName">
+                <th mat-header-cell *matHeaderCellDef>Plano</th>
+                <td mat-cell *matCellDef="let row">
+                    {{ row.data.dental_plan.name }}
+                </td>
+            </ng-container>
+
             <ng-container matColumnDef="cardNumber">
                 <th mat-header-cell *matHeaderCellDef>Número da carteirinha</th>
                 <td mat-cell *matCellDef="let row">

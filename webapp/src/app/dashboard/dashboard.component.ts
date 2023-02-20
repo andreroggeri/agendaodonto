@@ -14,10 +14,8 @@ import * as ptLocale from 'date-fns/locale/pt';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ITreatmentRequestResponse } from 'src/app/shared/interfaces/services/treatment-request.response';
-import {
-    TreatmentRequestFilter,
-    TreatmentRequestService,
-} from 'src/app/treatment-request/service/treatment-request.service';
+import { TreatmentRequestFilter } from 'src/app/treatment-request/service/treatment-request.filter';
+import { TreatmentRequestService } from 'src/app/treatment-request/service/treatment-request.service';
 
 import { DentalPlanService } from '../dental-plan/dental-plan.service';
 import { PatientFilter } from '../patient/patient.filter';

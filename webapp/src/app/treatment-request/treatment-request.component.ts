@@ -28,6 +28,7 @@ const labelMap: Record<TreatmentRequestStatus, string> = {
 })
 export class TreatmentRequestComponent implements OnInit {
     readonly columnsToDisplay = [
+        'planName',
         'cardNumber',
         'patientPhone',
         'patientFirstName',
