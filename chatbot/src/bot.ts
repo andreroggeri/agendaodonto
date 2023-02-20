@@ -16,8 +16,7 @@ async function handleMessage(client: Messenger, from: string, content: string) {
   console.log(context);
   if (content.includes('!reset')) {
     await client.sendMessage(from, 'Okay!');
-    context.setCurrentFlow('initialFlow');
-    await context.save();
+    await context.reset();
   }
   if (content.includes('!ping')) {
     console.log('replying', { from });

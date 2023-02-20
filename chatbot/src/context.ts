@@ -49,6 +49,10 @@ class ClientContext {
     };
     await redis.set(this.author, JSON.stringify(data));
   }
+
+  async reset() {
+    await redis.del(this.author);
+  }
 }
 
 export async function loadContext(messageAuthor: string): Promise<ClientContext> {
