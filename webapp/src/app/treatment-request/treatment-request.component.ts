@@ -91,11 +91,21 @@ export class TreatmentRequestComponent implements OnInit {
                 treatmentRequest,
             },
         });
-        ref.afterClosed().subscribe((patient: IPatientResponse) => {
-            if (patient) {
-                this.state.mergePatient(treatmentRequest, patient);
-            }
-        });
+        ref.afterClosed().subscribe(
+            (closeEvent: {
+                patient: IPatientResponse;
+                updatePhone: boolean;
+            }) => {
+                const { patient, updatePhone } = closeEvent;
+                if (patient) {
+                    this.state.mergePatient({
+                        row: treatmentRequest,
+                        patient,
+                        updatePhone,
+                    });
+                }
+            },
+        );
     }
 
     requestTreatment(row: ITreatmentRequestRow) {
