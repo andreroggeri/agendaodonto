@@ -124,6 +124,9 @@ export class PatientDetailComponent extends BaseComponent implements OnInit {
     onSubmit() {
         this.isSubmitting = true;
         const data: IPatientResponse = this.patientForm.value;
+        if (data.dental_plan_card_number === '') {
+            delete data.dental_plan_card_number;
+        }
         this.patientService
             .save(data)
             .pipe(finalize(() => (this.isSubmitting = false)))
