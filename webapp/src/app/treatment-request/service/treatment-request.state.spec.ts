@@ -423,7 +423,11 @@ describe('TreatmentRequestStateService', () => {
             };
 
             scheduler.run(({ expectObservable }) => {
-                service.mergePatient(row, patientDb.get());
+                service.mergePatient({
+                    row,
+                    patient: patientDb.get(),
+                    updatePhone: true,
+                });
                 expectObservable(subject$.pipe(skip(3))).toBe(
                     expectedMarbles,
                     expected,

@@ -38,7 +38,7 @@ def send_message(self, schedule_id):
         return result
     except (TimeoutError, HTTPError) as e:
         logger.error(f'Failed to send message to schedule "{schedule_id}"', exc_info=e)
-        self.retry(exc=e, max_retries=settings.CELERY_TASK_MAX_RETRY, countdown=60 * 5)
+        self.retry(exc=e, max_retries=settings.CELERY_TASK_MAX_RETRY, countdown=60)
 
 
 @celery_app.task(bind=True)

@@ -1,6 +1,10 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import {
+    MatCheckboxChange,
+    MatDialogRef,
+    MAT_DIALOG_DATA,
+} from '@angular/material';
 import { BehaviorSubject } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
 import { PatientFilter } from 'src/app/patient/patient.filter';
@@ -18,6 +22,7 @@ export class PatientLookupComponent implements OnInit {
     rows$: BehaviorSubject<IPatientResponse[]> = new BehaviorSubject([]);
     filterForm: FormGroup;
     columnsToDisplay = ['name', 'lastName', 'phone'];
+    updatePhone = true;
 
     constructor(
         private patientService: PatientService,
@@ -61,6 +66,10 @@ export class PatientLookupComponent implements OnInit {
     }
 
     selectPatient(patient: IPatientResponse) {
-        this.dialogRef.close(patient);
+        this.dialogRef.close({ patient, updatePhone: this.updatePhone });
+    }
+
+    handleUpdatePhoneChange(changeEvent: MatCheckboxChange) {
+        this.updatePhone = changeEvent.checked;
     }
 }
