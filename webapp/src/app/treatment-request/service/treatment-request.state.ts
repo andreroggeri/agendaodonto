@@ -145,16 +145,25 @@ export class TreatmentRequestStateService {
         );
     }
 
-    mergePatient(row: ITreatmentRequestRow, patient: IPatientResponse) {
+    mergePatient(params: {
+        row: ITreatmentRequestRow;
+        patient: IPatientResponse;
+        updatePhone: boolean;
+    }) {
+        const { row, patient, updatePhone } = params;
         this.updateRow(row, { loading: true });
-        const updatedPatient = {
+        const updatedPatient: IPatientResponse = {
             ...patient,
             name: row.data.patient_first_name,
             last_name: row.data.patient_last_name,
-            phone: row.data.patient_phone,
             dental_plan: row.data.dental_plan,
             dental_plan_card_number: row.data.dental_plan_card_number,
         };
+
+        if (updatePhone) {
+            updatedPatient.phone = row.data.patient_phone;
+        }
+
         this.patientService.update(updatedPatient).subscribe(
             (_) => {
                 this.updateTreatmentRequest(row, TreatmentRequestStatus.READY);

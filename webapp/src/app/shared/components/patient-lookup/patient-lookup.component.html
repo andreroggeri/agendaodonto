@@ -27,6 +27,7 @@
                     <mat-icon>search</mat-icon>
                 </button>
             </mat-form-field>
+            <mat-checkbox [checked]="updatePhone" (change)="handleUpdatePhoneChange($event)">Atualizar telefone</mat-checkbox>
         </form>
     </div>
 
