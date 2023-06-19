@@ -1,9 +1,8 @@
 import * as express from 'express';
 import { exit } from 'process';
-import slugify from 'slugify';
 import buildApiRouter from './api/router';
 import apiService, { TreatmentRequestStatus } from './api/services/api.service';
-import { ConversationState, flows, runFlow } from './buttons';
+import { ConversationState, runFlow } from './buttons';
 import { loadContext } from './context';
 import { Messenger } from './messaging/messenger';
 import { extractPhoneFromJid } from './phone';
@@ -17,10 +16,12 @@ async function handleMessage(client: Messenger, from: string, content: string) {
   if (content.includes('!reset')) {
     await client.sendMessage(from, 'Okay!');
     await context.reset();
+    return;
   }
   if (content.includes('!ping')) {
     console.log('replying', { from });
     await client.sendMessage(from, 'pong');
+    return;
   }
 
   if (context.isLastInteractionTooOld) {
@@ -28,26 +29,30 @@ async function handleMessage(client: Messenger, from: string, content: string) {
     await runFlow('initialFlow', client, from);
     context.setCurrentFlow('initialFlow');
     await context.save();
-  }
-}
-
-async function handleButtonResponse(client: Messenger, from: string, selectedButtonId: string) {
-  const context = await loadContext(from);
-  const currentFlow = context.getCurrentFlow();
-
-  const selectedButton = currentFlow.buttons.find((b) => slugify(b.text, { lower: true }) === selectedButtonId);
-
-  if (!selectedButton) {
-    await client.sendMessage(from, 'Resposta inválida');
     return;
   }
 
-  const nextFlow = selectedButton.nextFlow;
+  // Extract numbers from response
+  const buttonIdx = parseInt(content.match(/\d+/g)?.[0] ?? '');
+  if (Number.isNaN(buttonIdx)) {
+    console.log('Received non-numeric response', { from, content });
+    return;
+  }
 
-  await runFlow(nextFlow, client, from);
+  const flow = context.getCurrentFlow();
+  const flowButton = flow.buttons[buttonIdx - 1];
+  if (flow.buttons.length === 0) {
+    return;
+  }
+  if (!flowButton) {
+    console.log('Received invalid response', { from, content, buttonIdx });
+    const validOptions = flow.buttons.map((b, idx) => `[${idx + 1}] ${b.text}`).join('\n');
+    await client.sendMessage(from, `Opção inválida. Escolha uma das opções abaixo:\n${validOptions}`);
+    return;
+  }
 
-  context.setCurrentFlow(nextFlow);
-
+  await runFlow(flowButton.nextFlow, client, from);
+  context.setCurrentFlow(flowButton.nextFlow);
   await context.save();
 }
 
@@ -63,7 +68,7 @@ async function handleImage(client: Messenger, from: string, image: Buffer) {
     }
 
     const [result] = await vision.textDetection(image);
-    let cardNumberMatch: RegExpMatchArray | null | undefined;
+    let cardNumberMatch: string[] | null | undefined;
     let dentalPlanName: string;
     switch (flow.state) {
       case ConversationState.GatheringAmilCard:
@@ -119,26 +124,10 @@ void (async () => {
 
   messenger.onMessage(async ({ from, content }) => {
     console.log('message received', { from, content });
-    if (settings.testMode && content !== '!ping' && !from.includes('8371')) {
-      console.info('TEST_MODE enabled, Ignoring message !');
-      return;
-    }
 
     await redis.lpush('messages', JSON.stringify({ from, content }));
 
     await handleMessage(messenger, from, content);
-  });
-
-  messenger.onButtonResponse(async ({ from, selectedButtonId }) => {
-    console.log('button response received', { from, selectedButtonId });
-    if (settings.testMode && !from.includes('8371')) {
-      console.info('TEST_MODE enabled, Ignoring message !');
-      return;
-    }
-
-    await redis.lpush('button_responses', JSON.stringify({ from, content: selectedButtonId }));
-
-    await handleButtonResponse(messenger, from, selectedButtonId);
   });
 
   messenger.onImage(async ({ from, image }) => {
