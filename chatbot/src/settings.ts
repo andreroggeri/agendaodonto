@@ -1,6 +1,5 @@
 export const settings = {
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
-  testMode: JSON.parse((process.env.TEST_MODE ?? 'false').toLowerCase()) as boolean,
   port: process.env.PORT ?? 3000,
   authenticationPath: process.env.AUTHENTICATION_PATH ?? './baileys_auth_info',
   scheduleApi: {

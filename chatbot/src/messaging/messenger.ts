@@ -1,3 +1,4 @@
+import { Boom } from '@hapi/boom';
 import makeWASocket, {
   DisconnectReason,
   downloadMediaMessage,
@@ -5,16 +6,13 @@ import makeWASocket, {
   makeInMemoryStore,
   proto,
   useMultiFileAuthState,
-} from '@adiwajshing/baileys';
-import { Boom } from '@hapi/boom';
+} from '@whiskeysockets/baileys';
 import { Redis } from 'ioredis';
-import slugify from 'slugify';
-import { WhatsappButton } from '../buttons';
 import { extractPhoneFromJid } from '../phone';
 import { settings } from '../settings';
+import { MessengerCache } from './cache';
 
 const STORE_KEY = 'whatsapp_store';
-const retryMap = {};
 
 export class Messenger {
   private socket: ReturnType<typeof makeWASocket>;
@@ -32,49 +30,19 @@ export class Messenger {
     return await this.socket.sendMessage(to, { text: content });
   }
 
-  async sendButtons(to: string, text: string, buttons: WhatsappButton[]): Promise<proto.WebMessageInfo | undefined> {
-    const buttonsMessage = buttons.map((button) => {
-      return {
-        buttonId: slugify(button.text, { lower: true }),
-        buttonText: {
-          displayText: button.text,
-        },
-        type: 1,
-      };
-    });
-
-    const buttonMessage = {
-      text,
-      buttons: buttonsMessage,
-    };
-
-    return await this.socket.sendMessage(to, buttonMessage);
-  }
-
   onMessage(callback: (message: { from: string; content: string }) => any): void {
     this.socket.ev.on('messages.upsert', (event) => {
+      console.log('onmessage', JSON.stringify(event, null, 2));
       if (event.type === 'notify') {
         event.messages.forEach((message) => {
-          if (message.key.remoteJid !== 'status@broadcast' && !message.key.fromMe && message.message?.conversation) {
+          if (
+            message.key.remoteJid !== 'status@broadcast' &&
+            !message.key.fromMe &&
+            message.message?.extendedTextMessage?.text
+          ) {
             if (message.key.remoteJid) {
-              callback({ from: message.key.remoteJid, content: message.message?.conversation });
+              callback({ from: message.key.remoteJid, content: message.message?.extendedTextMessage.text });
             }
-          }
-        });
-      }
-    });
-  }
-
-  onButtonResponse(callback: (message: { from: string; selectedButtonId: string }) => any): void {
-    this.socket.ev.on('messages.upsert', (event) => {
-      const messageWithButtons = event.messages.filter((message) => message.message?.buttonsResponseMessage);
-      if (event.type === 'notify' && messageWithButtons.length > 0) {
-        messageWithButtons.forEach((message) => {
-          if (message.key.remoteJid && message.message?.buttonsResponseMessage?.selectedButtonId) {
-            callback({
-              from: message.key.remoteJid,
-              selectedButtonId: message.message.buttonsResponseMessage.selectedButtonId,
-            });
           }
         });
       }
@@ -103,7 +71,7 @@ export class Messenger {
       version,
       auth: state,
       printQRInTerminal: true,
-      msgRetryCounterMap: retryMap,
+      msgRetryCounterCache: new MessengerCache(),
     });
 
     this.socket.ev.process(async (event) => {
