@@ -164,7 +164,13 @@ export async function runFlow(flowName: FlowName, client: Messenger, to: string)
   console.log('Running flow', flowName);
   const flow = flows[flowName];
   if (flow.buttons.length > 0) {
-    await client.sendButtons(to, flow.message, flow.buttons);
+    const buttons = flow.buttons.reduce((acc, cur, idx) => {
+      acc += `[${idx + 1}] ${cur.text}\n`;
+      return acc;
+    }, '');
+    const helperText = 'Digite o número correspondente a opção desejada.';
+    const message = `${flow.message}\n\n${buttons}\n${helperText}`;
+    await client.sendMessage(to, message);
   } else {
     await client.sendMessage(to, flow.message);
   }
