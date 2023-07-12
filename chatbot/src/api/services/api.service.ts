@@ -1,3 +1,4 @@
+import logger from '../../logging';
 import http from './http';
 
 interface PaginatedResponse<T> {
@@ -34,12 +35,12 @@ class ApiService {
   }
 
   async createTreatmentRequest(request: CreateTreatmentRequest) {
-    console.log('Creating treatment request', { request });
+    logger.info('Creating treatment request', { request });
     try {
-      await http.post('/v1/treatment-requests/', request);
-      console.log('Treatment request created');
+      const result = await http.post('/v1/treatment-requests/', request);
+      logger.info('Treatment request created', { request, result: result.data });
     } catch (e) {
-      console.error('Error creating treatment request', { request, error: e });
+      logger.error('Error creating treatment request', { request, error: e });
     }
   }
 }
