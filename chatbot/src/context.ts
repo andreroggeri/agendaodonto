@@ -26,7 +26,6 @@ class ClientContext {
 
   static fromObject(data: SavedState): ClientContext {
     const currentFlowKey = (Object.keys(flows).find((k) => k === data.flowName) as FlowName) || 'initialFlow';
-    console.log('Loading context from object', { data, currentFlowKey });
     const flow = flows[currentFlowKey];
     return new ClientContext(data.from, flow, currentFlowKey, new Date(data.lastInteraction));
   }

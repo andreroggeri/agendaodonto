@@ -1,7 +1,6 @@
 import { utcToZonedTime } from 'date-fns-tz';
 
 export function currentTimeGreeting(): string {
-  console.log('generating current time')
   const now = new Date();
   const zonedTime = utcToZonedTime(now, 'America/Sao_Paulo');
 

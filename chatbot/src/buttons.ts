@@ -1,3 +1,4 @@
+import logger from './logging';
 import * as messages from './messages';
 import { Messenger } from './messaging/messenger';
 
@@ -161,7 +162,7 @@ function buildFlows(): Record<FlowName, WhatsappChatFlow> {
 export const flows = buildFlows();
 
 export async function runFlow(flowName: FlowName, client: Messenger, to: string) {
-  console.log('Running flow', flowName);
+  logger.info('Running flow', flowName);
   const flow = flows[flowName];
   if (flow.buttons.length > 0) {
     const buttons = flow.buttons.reduce((acc, cur, idx) => {
