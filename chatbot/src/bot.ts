@@ -4,6 +4,7 @@ import buildApiRouter from './api/router';
 import apiService, { TreatmentRequestStatus } from './api/services/api.service';
 import { ConversationState, runFlow } from './buttons';
 import { loadContext } from './context';
+import logger from './logging';
 import { Messenger } from './messaging/messenger';
 import { extractPhoneFromJid } from './phone';
 import { redis } from './redis';
@@ -12,20 +13,20 @@ import { vision } from './vision';
 
 async function handleMessage(client: Messenger, from: string, content: string) {
   const context = await loadContext(from);
-  console.log(context);
+  logger.info('Context found', { context });
   if (content.includes('!reset')) {
     await client.sendMessage(from, 'Okay!');
     await context.reset();
     return;
   }
   if (content.includes('!ping')) {
-    console.log('replying', { from });
+    logger.info('replying', { from });
     await client.sendMessage(from, 'pong');
     return;
   }
 
   if (context.isLastInteractionTooOld) {
-    console.log('Last interaction was too old, restarting from the beginning');
+    logger.info('Last interaction was too old, restarting from the beginning');
     await runFlow('initialFlow', client, from);
     context.setCurrentFlow('initialFlow');
     await context.save();
@@ -35,7 +36,7 @@ async function handleMessage(client: Messenger, from: string, content: string) {
   // Extract numbers from response
   const buttonIdx = parseInt(content.match(/\d+/g)?.[0] ?? '');
   if (Number.isNaN(buttonIdx)) {
-    console.log('Received non-numeric response', { from, content });
+    logger.info('Received non-numeric response', { from, content });
     return;
   }
 
@@ -45,7 +46,7 @@ async function handleMessage(client: Messenger, from: string, content: string) {
     return;
   }
   if (!flowButton) {
-    console.log('Received invalid response', { from, content, buttonIdx });
+    logger.info('Received invalid response', { from, content, buttonIdx });
     const validOptions = flow.buttons.map((b, idx) => `[${idx + 1}] ${b.text}`).join('\n');
     await client.sendMessage(from, `Opção inválida. Escolha uma das opções abaixo:\n${validOptions}`);
     return;
@@ -63,7 +64,7 @@ async function handleImage(client: Messenger, from: string, image: Buffer) {
     const flow = context.getCurrentFlow();
 
     if (![ConversationState.GatheringAmilCard, ConversationState.GatheringInterondontoCard].includes(flow.state)) {
-      console.log('Received image but not expecting one', { state: flow.state, from });
+      logger.warn('Received image but not expecting one', { state: flow.state, from });
       return;
     }
 
@@ -86,14 +87,13 @@ async function handleImage(client: Messenger, from: string, image: Buffer) {
         throw new Error('Invalid state');
     }
 
-    console.log({ result: result.fullTextAnnotation?.text?.replace(/ /g, '') });
     if (cardNumberMatch) {
       const found = [...cardNumberMatch].map((c) => c.trim());
-      console.log('Found card numbers: ', { foundCardNumbers: found });
+      logger.info('Found card numbers: ', { foundCardNumbers: found });
       const dentalPlan = await apiService.findDentalPlanByName(dentalPlanName);
 
       for (const cardNumber of found) {
-        console.log('Creating treatment request', { cardNumber, dentalPlan });
+        logger.info('Creating treatment request', { cardNumber, dentalPlan });
         await apiService.createTreatmentRequest({
           dental_plan: dentalPlan.id,
           dental_plan_card_number: cardNumber,
@@ -104,10 +104,10 @@ async function handleImage(client: Messenger, from: string, image: Buffer) {
         });
       }
     } else {
-      console.warn('No card number found');
+      logger.warn('No card number found');
     }
   } catch (err) {
-    console.error('Failed to handle message', err);
+    logger.error('Failed to handle message', err);
   }
 }
 
@@ -117,13 +117,13 @@ void (async () => {
     return acc;
   }, {});
 
-  console.log('Settings => ', { ...settings, secrets: safeSecrets });
+  logger.info('Settings => ', { ...settings, secrets: safeSecrets });
 
   const messenger = new Messenger(redis);
   await messenger.init();
 
   messenger.onMessage(async ({ from, content }) => {
-    console.log('message received', { from, content });
+    logger.info('message received', { from, content });
 
     await redis.lpush('messages', JSON.stringify({ from, content }));
 
@@ -142,7 +142,7 @@ void (async () => {
       const status = await messenger.status();
       return res.status(200).json(status);
     } catch {
-      console.error('healthcheck failed');
+      logger.error('healthcheck failed');
       exit(1);
     }
   });
@@ -150,6 +150,6 @@ void (async () => {
   app.use('/v1/', buildApiRouter(messenger));
 
   app.listen(settings.port, () => {
-    console.log(`Chatbot is running on :${settings.port}`);
+    logger.info(`Chatbot is running on :${settings.port}`);
   });
 })();

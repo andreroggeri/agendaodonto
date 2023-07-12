@@ -26,5 +26,6 @@ module.exports = {
         checksVoidReturn: false,
       },
     ],
+    'no-console': 'error',
   },
 };

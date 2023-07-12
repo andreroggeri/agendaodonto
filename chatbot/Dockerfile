@@ -16,4 +16,6 @@ WORKDIR /app/dist
 
 ADD scripts/entrypoint.sh .
 
+ENV NODE_ENV=production
+
 ENTRYPOINT [ "./entrypoint.sh" ]

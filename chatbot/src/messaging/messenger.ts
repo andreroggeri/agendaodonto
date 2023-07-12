@@ -8,6 +8,7 @@ import makeWASocket, {
   useMultiFileAuthState,
 } from '@whiskeysockets/baileys';
 import { Redis } from 'ioredis';
+import logger from '../logging';
 import { extractPhoneFromJid } from '../phone';
 import { settings } from '../settings';
 import { MessengerCache } from './cache';
@@ -32,7 +33,7 @@ export class Messenger {
 
   onMessage(callback: (message: { from: string; content: string }) => any): void {
     this.socket.ev.on('messages.upsert', (event) => {
-      console.log('onmessage', JSON.stringify(event, null, 2));
+      logger.debug('onmessage', { event });
       if (event.type === 'notify') {
         event.messages.forEach((message) => {
           if (
@@ -80,15 +81,15 @@ export class Messenger {
         const { connection, lastDisconnect } = update;
         if (connection === 'close') {
           if ((lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut) {
-            console.warn('You are logged out.');
+            logger.warn('You are logged out.');
             process.exit(1);
           } else {
-            console.warn('Connection closed. You are logged out.');
+            logger.warn('Connection closed. You are logged out.');
             process.exit(1);
           }
         }
 
-        console.log('connection update', update);
+        logger.debug('connection update', { update });
       }
       if (event['creds.update'] != null) {
         await saveCreds();
@@ -123,13 +124,12 @@ export class Messenger {
     const storeData = await this.redis.get(STORE_KEY);
 
     if (storeData) {
-      console.info('Loading store from redis');
       this.store.fromJSON(JSON.parse(storeData));
     }
 
     this.storeHandlerInterval = setInterval(() => {
       const data = JSON.stringify(this.store.toJSON());
-      this.redis.set(STORE_KEY, data).catch(console.error);
+      this.redis.set(STORE_KEY, data).catch(logger.error);
     }, 10_000);
 
     this.store.bind(this.socket.ev);

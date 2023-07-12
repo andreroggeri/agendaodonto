@@ -11,4 +11,5 @@ export const settings = {
     apiKey: process.env.API_KEY ?? 'fake-key',
     googleRecogApiKey: process.env.GOOGLE_RECOG_API_KEY ?? 'fake-key',
   },
+  logLevel: process.env.LOG_LEVEL ?? 'debug',
 };
