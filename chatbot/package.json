@@ -46,7 +46,7 @@
     "@types/redis": "^4.0.11",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "eslint": "^8.35.0",
-    "eslint-config-standard-with-typescript": "^23.0.0",
+    "eslint-config-standard-with-typescript": "^36.1.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.3.0",
     "eslint-plugin-promise": "^6.1.1",
