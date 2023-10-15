@@ -2,8 +2,9 @@
 
 if [ $# -eq 0 ]; then
     echo "Starting chatbot"
-    node bot.js
+    exec node bot.js
 else
     echo "Running command $@"
+    cd .. # change to root directory
     exec "$@"
 fi
