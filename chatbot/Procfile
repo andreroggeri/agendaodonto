@@ -1,2 +1,2 @@
-web: node bot.js
+web: node dist/bot.js
 release: npx prisma migrate deploy
