@@ -6,9 +6,11 @@ WORKDIR /app
 
 ADD ./package*.json /app/
 
-RUN npm i
+RUN npm ci
 
 ADD . /app
+
+RUN npx prisma generate
 
 RUN npm run build
 
