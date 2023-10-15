@@ -1,94 +1,146 @@
-name: "Release the kraken for real"
+name: "Release the kraken"
 on:
   push:
     branches:
-      - release
+      - main
     paths:
       - "backend/**"
       - "chatbot/**"
       - "webapp/**"
-      - ".github/workflows/release.yml"
+      - ".github/workflows/release-prod.yml"
+concurrency:
+  group: release-production
 
 jobs:
-  release-chatbot-production:
+  check-changed-apps:
     runs-on: ubuntu-latest
+    outputs:
+      changed-files-backend: ${{ steps.changed-files-backend.outputs.any_changed }}
+      changed-files-chatbot: ${{ steps.changed-files-chatbot.outputs.any_changed }}
+      changed-files-webapp: ${{ steps.changed-files-webapp.outputs.any_changed }}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Check changes on chatbot
-        id: changed-files
-        uses: tj-actions/changed-files@v34
-        with:
-          since_last_remote_commit: true
-          files: |
-            chatbot/**
-      - name: Deploy
-        uses: dokku/github-action@master
-        if: steps.changed-files.outputs.any_changed == 'true'
-        with:
-          branch: "main"
-          git_remote_url: ssh://dokku@deploy.agendaodonto.com/messaging
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
-          git_push_flags: "--force"
 
-  release-backend-production:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - name: Check changes on backend
-        id: changed-files
-        uses: tj-actions/changed-files@v34
+        id: changed-files-backend
+        uses: tj-actions/changed-files@v39
         with:
           since_last_remote_commit: true
           files: |
             backend/**
+            .github/**
+
+      - name: Check changes on chatbot
+        id: changed-files-chatbot
+        uses: tj-actions/changed-files@v39
+        with:
+          since_last_remote_commit: true
+          files: |
+            chatbot/**
+            .github/**
+
+      - name: Check changes on webapp
+        id: changed-files-webapp
+        uses: tj-actions/changed-files@v39
+        with:
+          since_last_remote_commit: true
+          files: |
+            webapp/**
+            .github/**
+
+  release-backend-production:
+    needs: check-changed-apps
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    concurrency:
+      group: wireguard
+    if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup wireguard
+        uses: egor-tensin/setup-wireguard@v1
+        with:
+          endpoint: ${{ secrets.WG_ENDPOINT }}
+          endpoint_public_key: ${{ secrets.WG_ENDPOINT_PUBLIC_KEY }}
+          private_key: ${{ secrets.WG_PRIVATE_KEY }}
+          ips: ${{ secrets.WG_IPS }}
+          allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
+
+      - name: Check VPN connection
+        run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
+
       - name: Deploy
         uses: dokku/github-action@master
-        if: steps.changed-files.outputs.any_changed == 'true'
         with:
           branch: "main"
-          git_remote_url: ssh://dokku@deploy.agendaodonto.com/backend
+          git_remote_url: ssh://dokku@${{secrets.PRODUCTION_VPN_IP}}/backend
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
+          git_push_flags: "--force"
+
+  release-chatbot-production:
+    needs: check-changed-apps
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    if: needs.check-changed-apps.outputs.changed-files-chatbot == 'true'
+    concurrency:
+      group: wireguard
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup wireguard
+        uses: egor-tensin/setup-wireguard@v1
+        with:
+          endpoint: ${{ secrets.WG_ENDPOINT }}
+          endpoint_public_key: ${{ secrets.WG_ENDPOINT_PUBLIC_KEY }}
+          private_key: ${{ secrets.WG_PRIVATE_KEY }}
+          ips: ${{ secrets.WG_IPS }}
+          allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
+
+      - name: Check VPN connection
+        run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
+
+      - name: Deploy
+        uses: dokku/github-action@master
+        with:
+          branch: "main"
+          git_remote_url: ssh://dokku@${{secrets.PRODUCTION_VPN_IP}}/messaging
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
           git_push_flags: "--force"
 
   release-webapp-production:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v3
-          with:
-            fetch-depth: 0
-        - name: Check changes on webapp
-          id: changed-files
-          uses: tj-actions/changed-files@v34
-          with:
-            since_last_remote_commit: true
-            files: |
-              webapp/**
+    needs: check-changed-apps
+    if: needs.check-changed-apps.outputs.changed-files-webapp == 'true'
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-        - name: Setup Node.js
-          uses: actions/setup-node@v2
-          with:
-            node-version: 14
-            cache: "npm"
-            cache-dependency-path: webapp/package-lock.json
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          cache: "npm"
+          cache-dependency-path: webapp/package-lock.json
 
-        - name: Build
-          if: steps.changed-files.outputs.any_changed == 'true'
-          run: |
-            cd webapp
-            npm ci
-            npm run build:prod
+      - name: Build
+        run: |
+          cd webapp
+          npm ci
+          npm run build:prod
 
-        - name: Deploy
-          if: steps.changed-files.outputs.any_changed == 'true'
-          uses: FirebaseExtended/action-hosting-deploy@v0
-          with:
-            repoToken: "${{ secrets.GITHUB_TOKEN }}"
-            firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
-            projectId: agendaodonto-29023
-            channelId: live
-            entryPoint: ./webapp
-
+      - name: Deploy
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+          projectId: agendaodonto-29023
+          channelId: live
+          entryPoint: ./webapp
+          firebaseToolsVersion: "11.16.1"

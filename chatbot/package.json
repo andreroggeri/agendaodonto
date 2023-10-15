@@ -27,6 +27,7 @@
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",
     "@google-cloud/vision": "^3.0.1",
+    "@prisma/client": "^5.4.2",
     "@whiskeysockets/baileys": "^6.2.1",
     "axios": "^1.2.0",
     "date-fns": "^2.29.3",
@@ -43,13 +44,13 @@
     "@types/ioredis": "^4.27.8",
     "@types/node": "^18.14.6",
     "@types/object-hash": "^3.0.0",
-    "@types/redis": "^4.0.11",
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "eslint": "^8.35.0",
     "eslint-config-standard-with-typescript": "^23.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.3.0",
     "eslint-plugin-promise": "^6.1.1",
+    "prisma": "^5.4.2",
     "qrcode-terminal": "^0.12.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^4.9.5"
