@@ -2,8 +2,12 @@ import { Request, Response } from 'express';
 import { loadContext } from '../context';
 import { Messenger } from '../messaging/messenger';
 
+enum SendMessageErrors {
+  NO_ACCOUNT = 'NO_ACCOUNT',
+}
+
 export async function handleMessageRequest(req: Request, res: Response, messenger: Messenger) {
-  const { phone, message } = req.body as { phone: string, message: string };
+  const { phone, message } = req.body as { phone: string; message: string };
   if (!phone || !message) {
     return res.status(400).json({ error: 'phone and message are required' });
   }
@@ -11,7 +15,7 @@ export async function handleMessageRequest(req: Request, res: Response, messenge
   const jid = `55${phone}@s.whatsapp.net`;
   const hasAccount = await messenger.phoneHasAccount(jid);
   if (!hasAccount) {
-    return res.status(400).json({ error: 'phone does not have an account' });
+    return res.status(422).json({ error: SendMessageErrors.NO_ACCOUNT });
   }
 
   await messenger.sendMessage(jid, message);

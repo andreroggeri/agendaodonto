@@ -97,10 +97,10 @@ export class Messenger {
 
   async init(): Promise<void> {
     const { state, saveCreds } = await useMultiFileAuthState(settings.authenticationPath);
-    const { version } = await fetchLatestBaileysVersion();
-
+    const baileysData = await fetchLatestBaileysVersion();
+    logger.info(`Baileys version: ${baileysData.version.toString()}`, baileysData);
     this.socket = makeWASocket({
-      version,
+      version: baileysData.version,
       auth: state,
       printQRInTerminal: true,
       msgRetryCounterCache: new MessengerCache(),
@@ -143,6 +143,9 @@ export class Messenger {
 
   async phoneHasAccount(jid: string): Promise<boolean> {
     const status = await this.socket.onWhatsApp(jid);
+    if (status.length === 0) {
+      return false;
+    }
 
     return status[0].exists;
   }
