@@ -1,4 +1,4 @@
-name: "Release the kraken"
+name: "Release to Staging"
 on:
   push:
     branches:
