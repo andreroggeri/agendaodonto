@@ -1,6 +1,7 @@
 import { Boom } from '@hapi/boom';
 import makeWASocket, {
   DisconnectReason,
+  WAMessage,
   downloadMediaMessage,
   fetchLatestBaileysVersion,
   makeInMemoryStore,
@@ -12,8 +13,24 @@ import logger from '../logging';
 import { extractPhoneFromJid } from '../phone';
 import { settings } from '../settings';
 import { MessengerCache } from './cache';
+import database from '../database';
+import Long = require('long');
 
 const STORE_KEY = 'whatsapp_store';
+
+function extractTimestamp(message: WAMessage): number {
+  if (message.messageTimestamp) {
+    if (typeof message.messageTimestamp === 'string') {
+      return parseInt(message.messageTimestamp) * 1000;
+    } else if (message.messageTimestamp instanceof Long) {
+      return message.messageTimestamp.low * 1000;
+    } else {
+      return message.messageTimestamp * 1000;
+    }
+  } else {
+    return Date.now();
+  }
+}
 
 export class Messenger {
   private socket: ReturnType<typeof makeWASocket>;
@@ -34,19 +51,33 @@ export class Messenger {
   onMessage(callback: (message: { from: string; content: string }) => any): void {
     this.socket.ev.on('messages.upsert', (event) => {
       logger.debug('onmessage', { event });
-      if (event.type === 'notify') {
-        event.messages.forEach((message) => {
-          if (
-            message.key.remoteJid !== 'status@broadcast' &&
-            !message.key.fromMe &&
-            message.message?.extendedTextMessage?.text
-          ) {
-            if (message.key.remoteJid) {
-              callback({ from: message.key.remoteJid, content: message.message?.extendedTextMessage.text });
-            }
+      event.messages.forEach(async (message) => {
+        if (message.key.remoteJid) {
+          const messageTs = extractTimestamp(message);
+          try {
+            await database.message.create({
+              data: {
+                conversationKey: message.key.remoteJid,
+                content: message.message?.extendedTextMessage?.text ?? message.message?.conversation ?? '',
+                isFromMe: message.key.fromMe ?? false,
+                timestamp: new Date(messageTs),
+                pushName: message.pushName ?? '',
+              },
+            });
+          } catch (e) {
+            logger.error('Failed to save message', { message, e });
           }
-        });
-      }
+        }
+        if (
+          message.key.remoteJid !== 'status@broadcast' &&
+          !message.key.fromMe &&
+          message.message?.extendedTextMessage?.text
+        ) {
+          if (message.key.remoteJid) {
+            callback({ from: message.key.remoteJid, content: message.message?.extendedTextMessage.text });
+          }
+        }
+      });
     });
   }
 
