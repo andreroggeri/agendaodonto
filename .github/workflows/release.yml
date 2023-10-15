@@ -85,6 +85,8 @@ jobs:
     if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup wireguard
         uses: egor-tensin/setup-wireguard@v1
@@ -115,6 +117,8 @@ jobs:
       group: wireguard
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup wireguard
         uses: egor-tensin/setup-wireguard@v1
