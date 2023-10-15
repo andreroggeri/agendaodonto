@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - fix-release
     paths:
       - "backend/**"
       - "chatbot/**"
@@ -23,7 +24,7 @@ jobs:
 
       - name: Check changes on backend
         id: changed-files-backend
-        uses: tj-actions/changed-files@v34
+        uses: tj-actions/changed-files@v39
         with:
           since_last_remote_commit: true
           files: |
@@ -32,7 +33,7 @@ jobs:
 
       - name: Check changes on chatbot
         id: changed-files-chatbot
-        uses: tj-actions/changed-files@v34
+        uses: tj-actions/changed-files@v39
         with:
           since_last_remote_commit: true
           files: |
@@ -41,12 +42,39 @@ jobs:
 
       - name: Check changes on webapp
         id: changed-files-webapp
-        uses: tj-actions/changed-files@v34
+        uses: tj-actions/changed-files@v39
         with:
           since_last_remote_commit: true
           files: |
             webapp/**
             .github/**
+      - name: Show all
+        run: |
+          echo "Backend: ${{ steps.changed-files-backend.outputs.any_changed }}"
+          echo "Chatbot: ${{ steps.changed-files-chatbot.outputs.any_changed }} "
+          echo "Webapp: ${{ steps.changed-files-webapp.outputs.any_changed }}"
+
+  debug:
+    needs: check-changed-apps
+    runs-on: ubuntu-latest
+    steps:
+      - name: show all
+        run: |
+          echo "Backend: ${{ needs.check-changed-apps.outputs.changed-files-backend }}"
+          echo "Chatbot: ${{ needs.check-changed-apps.outputs.changed-files-chatbot }} "
+          echo "Webapp: ${{ needs.check-changed-apps.outputs.changed-files-webapp }}"
+      - name: run conditions on all string
+        run: |
+          echo "Backend: ${{ needs.check-changed-apps.outputs.changed-files-backend == 'true' }}"
+          echo "Chatbot: ${{ needs.check-changed-apps.outputs.changed-files-chatbot == 'true' }} "
+          echo "Webapp: ${{ needs.check-changed-apps.outputs.changed-files-webapp == 'true' }}"
+          echo "JSON: ${{ toJson(needs.check-changed-apps.outputs) }}"
+      - name: run conditions on all boolean
+        run: |
+          echo "Backend: ${{ needs.check-changed-apps.outputs.changed-files-backend == true }}"
+          echo "Chatbot: ${{ needs.check-changed-apps.outputs.changed-files-chatbot == true }} "
+          echo "Webapp: ${{ needs.check-changed-apps.outputs.changed-files-webapp == true }}"
+          echo "JSON: ${{ toJson(needs.check-changed-apps.outputs) }}"
 
   release-backend-staging:
     needs: check-changed-apps
@@ -54,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: wireguard
-    if: needs.check-changed-apps.outputs.changed-files-backend.any_changed == 'true'
+    if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
     steps:
       - uses: actions/checkout@v3
 
@@ -82,7 +110,7 @@ jobs:
     needs: check-changed-apps
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    if: needs.check-changed-apps.outputs.changed-files-chatbot.any_changed == 'true'
+    if: needs.check-changed-apps.outputs.changed-files-chatbot == 'true'
     concurrency:
       group: wireguard
     steps:
@@ -110,7 +138,7 @@ jobs:
 
   release-webapp-staging:
     needs: check-changed-apps
-    if: needs.check-changed-apps.outputs.changed-files-webapp.any_changed == 'true'
+    if: needs.check-changed-apps.outputs.changed-files-webapp == 'true'
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
