@@ -3,13 +3,13 @@ on:
   push:
     branches:
       - main
-      - fix-release
     paths:
       - "backend/**"
       - "chatbot/**"
       - "webapp/**"
       - ".github/workflows/release.yml"
-
+concurrency:
+  group: release-staging
 jobs:
   check-changed-apps:
     runs-on: ubuntu-latest
