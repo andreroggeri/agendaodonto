@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+
 export const settings = {
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
   port: process.env.PORT ?? 3000,
@@ -12,4 +14,7 @@ export const settings = {
     googleRecogApiKey: process.env.GOOGLE_RECOG_API_KEY ?? 'fake-key',
   },
   logLevel: process.env.LOG_LEVEL ?? 'debug',
+  prismaLogLevel: process.env.PRISMA_LOG_LEVEL
+    ? (process.env.PRISMA_LOG_LEVEL.split(',') as Prisma.LogLevel[])
+    : (['warn', 'error'] as Prisma.LogLevel[]),
 };
