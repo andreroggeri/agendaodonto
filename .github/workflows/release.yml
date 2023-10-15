@@ -10,18 +10,19 @@ on:
       - ".github/workflows/release.yml"
 
 jobs:
-  release-backend-staging:
-    timeout-minutes: 10
+  check-changed-apps:
     runs-on: ubuntu-latest
-    concurrency:
-      group: wireguard
+    outputs:
+      changed-files-backend: ${{ steps.changed-files-backend.outputs.any_changed }}
+      changed-files-chatbot: ${{ steps.changed-files-chatbot.outputs.any_changed }}
+      changed-files-webapp: ${{ steps.changed-files-webapp.outputs.any_changed }}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Check changes on backend
-        id: changed-files
+        id: changed-files-backend
         uses: tj-actions/changed-files@v34
         with:
           since_last_remote_commit: true
@@ -29,41 +30,8 @@ jobs:
             backend/**
             .github/**
 
-      - name: Setup wireguard
-        if: steps.changed-files.outputs.any_changed == 'true'
-        uses: egor-tensin/setup-wireguard@v1
-        with:
-          endpoint: ${{ secrets.WG_ENDPOINT }}
-          endpoint_public_key: ${{ secrets.WG_ENDPOINT_PUBLIC_KEY }}
-          private_key: ${{ secrets.WG_PRIVATE_KEY }}
-          ips: ${{ secrets.WG_IPS }}
-          allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
-
-      - name: Check VPN connection
-        if: steps.changed-files.outputs.any_changed == 'true'
-        run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
-
-      - name: Deploy
-        uses: dokku/github-action@master
-        if: steps.changed-files.outputs.any_changed == 'true'
-        with:
-          branch: "main"
-          git_remote_url: ssh://dokku@${{secrets.STAGING_VPN_IP}}/backend
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
-          git_push_flags: "--force"
-
-  release-chatbot-staging:
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
-    concurrency:
-      group: wireguard
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
       - name: Check changes on chatbot
-        id: changed-files
+        id: changed-files-chatbot
         uses: tj-actions/changed-files@v34
         with:
           since_last_remote_commit: true
@@ -71,8 +39,26 @@ jobs:
             chatbot/**
             .github/**
 
+      - name: Check changes on webapp
+        id: changed-files-webapp
+        uses: tj-actions/changed-files@v34
+        with:
+          since_last_remote_commit: true
+          files: |
+            webapp/**
+            .github/**
+
+  release-backend-staging:
+    needs: check-changed-apps
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    concurrency:
+      group: wireguard
+    if: needs.check-changed-apps.outputs.changed-files-backend.any_changed == 'true'
+    steps:
+      - uses: actions/checkout@v3
+
       - name: Setup wireguard
-        if: steps.changed-files.outputs.any_changed == 'true'
         uses: egor-tensin/setup-wireguard@v1
         with:
           endpoint: ${{ secrets.WG_ENDPOINT }}
@@ -82,12 +68,40 @@ jobs:
           allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
 
       - name: Check VPN connection
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
 
       - name: Deploy
         uses: dokku/github-action@master
-        if: steps.changed-files.outputs.any_changed == 'true'
+        with:
+          branch: "main"
+          git_remote_url: ssh://dokku@${{secrets.STAGING_VPN_IP}}/backend
+          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
+          git_push_flags: "--force"
+
+  release-chatbot-staging:
+    needs: check-changed-apps
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    if: needs.check-changed-apps.outputs.changed-files-chatbot.any_changed == 'true'
+    concurrency:
+      group: wireguard
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup wireguard
+        uses: egor-tensin/setup-wireguard@v1
+        with:
+          endpoint: ${{ secrets.WG_ENDPOINT }}
+          endpoint_public_key: ${{ secrets.WG_ENDPOINT_PUBLIC_KEY }}
+          private_key: ${{ secrets.WG_PRIVATE_KEY }}
+          ips: ${{ secrets.WG_IPS }}
+          allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
+
+      - name: Check VPN connection
+        run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
+
+      - name: Deploy
+        uses: dokku/github-action@master
         with:
           branch: "backend-in-docker"
           git_remote_url: ssh://dokku@${{secrets.STAGING_VPN_IP}}/messaging
@@ -95,24 +109,14 @@ jobs:
           git_push_flags: "--force"
 
   release-webapp-staging:
+    needs: check-changed-apps
+    if: needs.check-changed-apps.outputs.changed-files-webapp.any_changed == 'true'
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Check changes on webapp
-        id: changed-files
-        uses: tj-actions/changed-files@v34
-        with:
-          since_last_remote_commit: true
-          files: |
-            webapp/**
-            .github/**
 
       - name: Setup Node.js
-        if: steps.changed-files.outputs.any_changed == 'true'
         uses: actions/setup-node@v2
         with:
           node-version: 14
@@ -120,14 +124,12 @@ jobs:
           cache-dependency-path: webapp/package-lock.json
 
       - name: Build
-        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           cd webapp
           npm ci
           npm run build:staging
 
       - name: Deploy
-        if: steps.changed-files.outputs.any_changed == 'true'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
