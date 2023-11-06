@@ -58,7 +58,7 @@
         "codelyzer": "^5.0.1",
         "coveralls": "^3.0.7",
         "deep-object-diff": "^1.1.9",
-        "firebase-tools": "^6.2.2",
+        "firebase-tools": "^12.8.0",
         "jasmine-core": "~2.99.1",
         "jasmine-mock-factory": "^3.0.0",
         "jasmine-spec-reporter": "~4.2.1",
