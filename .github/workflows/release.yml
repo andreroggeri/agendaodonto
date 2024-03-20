@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - k8s-deployment
     paths:
       - "backend/**"
       - "chatbot/**"
@@ -55,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: wireguard
-    if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
+    if: needs.check-changed-apps.outputs.changed-files-backend == 'true' && false
     steps:
       - uses: actions/checkout@v3
         with:
@@ -91,7 +92,46 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
+
+      - name: Generate a new version
+        id: tag
+        uses: codacy/git-version@2.8.0
+        with:
+          prefix: chatbot-
+          log-paths: chatbot/
+          release-branch: k8s-deployment # TODO: Change to main
+          minor-identifier: "feat:"
+
+      - name: Strip module name from version
+        id: version
+        run: |
+          release_version=$(echo "${{ steps.tag.outputs.version }}" | sed 's/chatbot-//')
+          echo "::set-output name=version::$release_version"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Docker build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./chatbot
+          platforms: linux/amd64,linux/arm64
+          tags: ghcr.io/andreroggeri/chatbot:${{ steps.version.outputs.version }},ghcr.io/andreroggeri/chatbot:latest
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Setup wireguard
         uses: egor-tensin/setup-wireguard@v1
