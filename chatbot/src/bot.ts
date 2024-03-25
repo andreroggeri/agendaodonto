@@ -10,6 +10,7 @@ import { extractPhoneFromJid } from './phone';
 import { redis } from './redis';
 import { settings } from './settings';
 import { vision } from './vision';
+import db from './database';
 
 async function handleMessage(client: Messenger, from: string, content: string) {
   const context = await loadContext(from);
@@ -111,6 +112,24 @@ async function handleImage(client: Messenger, from: string, image: Buffer) {
   }
 }
 
+async function ensureDependencies() {
+  try {
+    await redis.ping();
+    logger.info('Redis is up and running');
+  } catch {
+    logger.error('Failed to connect to Redis');
+    process.exit(1);
+  }
+
+  try {
+    await db.$connect();
+    logger.info('Database is up and running');
+  } catch {
+    logger.error('Failed to connect to database');
+    process.exit(1);
+  }
+}
+
 void (async () => {
   const safeSecrets = Object.entries(settings.secrets).reduce<Record<string, string>>((acc, [key, value]) => {
     acc[key] = `${value.substring(0, 2)}*****${value.substring(value.length - 2)}`;
@@ -118,6 +137,8 @@ void (async () => {
   }, {});
 
   logger.info('Settings => ', { ...settings, secrets: safeSecrets });
+
+  await ensureDependencies();
 
   const messenger = new Messenger(redis);
   await messenger.init();
