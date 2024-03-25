@@ -110,6 +110,11 @@ jobs:
           release_version=$(echo "${{ steps.tag.outputs.version }}" | sed 's/chatbot-//')
           echo "::set-output name=version::$release_version"
 
+      - name: Create tag
+        uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ steps.tag.outputs.version }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -145,13 +150,23 @@ jobs:
       - name: Check VPN connection
         run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
 
-      - name: Deploy
-        uses: dokku/github-action@master
+      - name: Create secrets
+        uses: azure/k8s-create-secret@v5
         with:
-          branch: "backend-in-docker"
-          git_remote_url: ssh://dokku@${{secrets.STAGING_VPN_IP}}/messaging
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
-          git_push_flags: "--force"
+          namespace: default
+          secret-name: messaging-secrets
+          string-data: |
+            MESSAGING_API_KEY=${{ secrets.MESSAGING_API_KEY }}
+            MESSAGING_DB_USER=${{ secrets.MESSAGING_DB_USER }}
+            MESSAGING_DB_PASSWORD=${{ secrets.MESSAGING_DB_PASSWORD }}
+            MESSAGING_REDIS_PASSWORD=${{ secrets.MESSAGING_REDIS_PASSWORD }}
+      # - name: Deploy
+      #   uses: dokku/github-action@master
+      #   with:
+      #     branch: "backend-in-docker"
+      #     git_remote_url: ssh://dokku@${{secrets.STAGING_VPN_IP}}/messaging
+      #     ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
+      #     git_push_flags: "--force"
 
   release-webapp-staging:
     needs: check-changed-apps
