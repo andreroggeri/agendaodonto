@@ -96,24 +96,23 @@ jobs:
           fetch-depth: 0
 
       - name: Generate a new version
-        id: tag
-        uses: codacy/git-version@2.8.0
+        id: semver
+        uses: cycjimmy/semantic-release-action@v4
         with:
-          prefix: chatbot-
-          log-paths: chatbot/
-          release-branch: k8s-deployment # TODO: Change to main
-          minor-identifier: "feat:"
+          working_directory: "./chatbot"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Strip module name from version
         id: version
         run: |
-          release_version=$(echo "${{ steps.tag.outputs.version }}" | sed 's/chatbot-//')
+          release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/chatbot-//')
           echo "::set-output name=version::$release_version"
 
       - name: Create tag
         uses: rickstaa/action-create-tag@v1
         with:
-          tag: ${{ steps.tag.outputs.version }}
+          tag: ${{ steps.semver.outputs.new_release_version }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -138,17 +137,17 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Setup wireguard
-        uses: egor-tensin/setup-wireguard@v1
-        with:
-          endpoint: ${{ secrets.WG_ENDPOINT }}
-          endpoint_public_key: ${{ secrets.WG_ENDPOINT_PUBLIC_KEY }}
-          private_key: ${{ secrets.WG_PRIVATE_KEY }}
-          ips: ${{ secrets.WG_IPS }}
-          allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
+      # - name: Setup wireguard
+      #   uses: egor-tensin/setup-wireguard@v1
+      #   with:
+      #     endpoint: ${{ secrets.WG_ENDPOINT }}
+      #     endpoint_public_key: ${{ secrets.WG_ENDPOINT_PUBLIC_KEY }}
+      #     private_key: ${{ secrets.WG_PRIVATE_KEY }}
+      #     ips: ${{ secrets.WG_IPS }}
+      #     allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
 
-      - name: Check VPN connection
-        run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
+      # - name: Check VPN connection
+      #   run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
 
       - name: Create secrets
         uses: azure/k8s-create-secret@v5
@@ -160,6 +159,7 @@ jobs:
             MESSAGING_DB_USER=${{ secrets.MESSAGING_DB_USER }}
             MESSAGING_DB_PASSWORD=${{ secrets.MESSAGING_DB_PASSWORD }}
             MESSAGING_REDIS_PASSWORD=${{ secrets.MESSAGING_REDIS_PASSWORD }}
+
       # - name: Deploy
       #   uses: dokku/github-action@master
       #   with:
@@ -170,7 +170,7 @@ jobs:
 
   release-webapp-staging:
     needs: check-changed-apps
-    if: needs.check-changed-apps.outputs.changed-files-webapp == 'true'
+    if: needs.check-changed-apps.outputs.changed-files-webapp == 'true' && false
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
@@ -201,6 +201,7 @@ jobs:
 
   e2e-tests-staging:
     runs-on: ubuntu-latest
+    if: false
     needs:
       [release-backend-staging, release-chatbot-staging, release-webapp-staging]
     defaults:
