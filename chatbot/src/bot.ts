@@ -115,7 +115,7 @@ async function handleImage(client: Messenger, from: string, image: Buffer) {
 async function ensureDependencies() {
   try {
     await redis.ping();
-    logger.info('Redis is up and running');
+    logger.info('Redis is up and running.');
   } catch (err) {
     logger.error('Failed to connect to Redis', err);
     process.exit(1);
