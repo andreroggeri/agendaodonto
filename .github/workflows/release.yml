@@ -127,7 +127,7 @@ jobs:
           password: ${{secrets.GITHUB_TOKEN}}
 
       - name: Docker build
-        if: steps.semver.outputs.new_release_published
+        if: steps.semver.outputs.new_release_published && false
         uses: docker/build-push-action@v5
         with:
           context: ./chatbot
@@ -137,20 +137,26 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # - name: Setup wireguard
-      #   uses: egor-tensin/setup-wireguard@v1
-      #   with:
-      #     endpoint: ${{ secrets.WG_ENDPOINT }}
-      #     endpoint_public_key: ${{ secrets.WG_ENDPOINT_PUBLIC_KEY }}
-      #     private_key: ${{ secrets.WG_PRIVATE_KEY }}
-      #     ips: ${{ secrets.WG_IPS }}
-      #     allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
+      - name: Setup wireguard
+        uses: egor-tensin/setup-wireguard@v1
+        with:
+          endpoint: ${{ secrets.WG_ENDPOINT }}
+          endpoint_public_key: ${{ secrets.WG_ENDPOINT_PUBLIC_KEY }}
+          private_key: ${{ secrets.WG_PRIVATE_KEY }}
+          ips: ${{ secrets.WG_IPS }}
+          allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
 
-      # - name: Check VPN connection
-      #   run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
+      - name: Check VPN connection
+        run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
+
+      - name: Set context
+        if: steps.semver.outputs.new_release_published || true
+        uses: azure/k8s-set-context@v4
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
 
       - name: Create secrets
-        if: steps.semver.outputs.new_release_published
+        if: steps.semver.outputs.new_release_published || true
         uses: azure/k8s-create-secret@v5
         with:
           namespace: default
