@@ -116,16 +116,16 @@ async function ensureDependencies() {
   try {
     await redis.ping();
     logger.info('Redis is up and running');
-  } catch {
-    logger.error('Failed to connect to Redis');
+  } catch (err) {
+    logger.error('Failed to connect to Redis', err);
     process.exit(1);
   }
 
   try {
     await db.$connect();
     logger.info('Database is up and running');
-  } catch {
-    logger.error('Failed to connect to database');
+  } catch (err) {
+    logger.error('Failed to connect to database', err);
     process.exit(1);
   }
 }
