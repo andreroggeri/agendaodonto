@@ -83,6 +83,7 @@ jobs:
           git_push_flags: "--force"
 
   release-chatbot-staging:
+    environment: staging
     needs: check-changed-apps
     timeout-minutes: 10
     runs-on: ubuntu-latest
@@ -157,23 +158,22 @@ jobs:
 
       - name: Create secrets
         if: steps.semver.outputs.new_release_published || true
-        uses: azure/k8s-create-secret@v5
+        uses: andreroggeri/k8s-create-secret@patch-1
         with:
           namespace: default
+          secret-type: generic
           secret-name: messaging-secrets
           string-data: |
-            MESSAGING_API_KEY=${{ secrets.MESSAGING_API_KEY }}
-            MESSAGING_DB_USER=${{ secrets.MESSAGING_DB_USER }}
-            MESSAGING_DB_PASSWORD=${{ secrets.MESSAGING_DB_PASSWORD }}
-            MESSAGING_REDIS_PASSWORD=${{ secrets.MESSAGING_REDIS_PASSWORD }}
-
-      # - name: Deploy
-      #   uses: dokku/github-action@master
-      #   with:
-      #     branch: "backend-in-docker"
-      #     git_remote_url: ssh://dokku@${{secrets.STAGING_VPN_IP}}/messaging
-      #     ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
-      #     git_push_flags: "--force"
+            {
+              "messaging-api-key": "${{ secrets.MESSAGING_API_KEY }}",
+              "messaging-redis-password": "${{ secrets.MESSAGING_REDIS_PASSWORD }}",
+              "messaging-db-password": "${{ secrets.MESSAGING_DB_PASSWORD }}",
+              "messaging-db-url": "postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@messaging-postgres:5432/messaging",
+              "messaging-redis-url": "redis://:${{ secrets.MESSAGING_REDIS_PASSWORD }}@messaging-redis:6379",
+              "messaging-clinic-id": "${{ secrets.MESSAGING_CLINIC_ID }}",
+              "schedule-api-key": "${{ secrets.SCHEDULE_API_KEY }}",
+              "messaging-google-recog-api-key": "${{ secrets.MESSAGING_GOOGLE_RECOG_API_KEY }}"
+            }
 
   release-webapp-staging:
     needs: check-changed-apps
