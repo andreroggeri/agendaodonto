@@ -125,7 +125,7 @@ async function ensureDependencies() {
     await db.$connect();
     logger.info('Database is up and running');
   } catch (err) {
-    logger.error('Failed to connect to database', err);
+    logger.error('Failed to connect to database.', err);
     process.exit(1);
   }
 }
