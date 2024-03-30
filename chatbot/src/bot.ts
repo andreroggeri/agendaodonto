@@ -117,7 +117,7 @@ async function ensureDependencies() {
     await redis.ping();
     logger.info('Redis is up and running.');
   } catch (err) {
-    logger.error('Failed to connect to Redis', err);
+    logger.error('Failed to connect to Redis.', err);
     process.exit(1);
   }
 
