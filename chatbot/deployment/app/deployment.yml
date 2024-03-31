@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbot
+  template:
+    metadata:
+      labels:
+        app: chatbot
+    spec:
+      containers:
+        - name: chatbot
+          image: ghcr.io/andreroggeri/chatbot:1.2.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: messaging-secrets
+                  key: messaging-api-key
+            - name: API_URL
+              value: http://backend
+            - name: CLINIC_ID
+              valueFrom:
+                secretKeyRef:
+                  name: messaging-secrets
+                  key: messaging-clinic-id
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: messaging-secrets
+                  key: messaging-db-url
+            - name: GOOGLE_RECOG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: messaging-secrets
+                  key: messaging-google-recog-api-key
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: messaging-secrets
+                  key: messaging-redis-url
+            - name: SCHEDULE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: messaging-secrets
+                  key: schedule-api-key

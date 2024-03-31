@@ -157,8 +157,7 @@ jobs:
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
 
       - name: Create secrets
-        if: steps.semver.outputs.new_release_published == 'true' || true
-        uses: andreroggeri/k8s-create-secret@patch-1
+        uses: Azure/k8s-create-secret@v5
         with:
           namespace: default
           secret-type: generic
@@ -174,6 +173,33 @@ jobs:
               "schedule-api-key": "${{ secrets.SCHEDULE_API_KEY }}",
               "messaging-google-recog-api-key": "${{ secrets.MESSAGING_GOOGLE_RECOG_API_KEY }}"
             }
+
+      - name: Create database deployment
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+        with:
+          args: apply -f chatbot/deployment/postgres
+
+      - name: Create redis deployment
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+        with:
+          args: apply -f chatbot/deployment/redis
+
+      - name: Create app deployment
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+        with:
+          args: apply -f chatbot/deployment/app
+
+      - name: Migrate database
+        if: steps.semver.outputs.new_release_published == 'true' || true
+        run: |
+          kubectl port-forward service/messaging-postgres 5432:5432 &
+          docker run --rm -it --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging chatbot:${{ steps.version.outputs.version }} npm run db:migrate
 
   release-webapp-staging:
     needs: check-changed-apps

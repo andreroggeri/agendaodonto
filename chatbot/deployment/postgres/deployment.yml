@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-postgres
+spec:
+  selector:
+    matchLabels:
+      app: messaging-postgres
+  template:
+    metadata:
+      labels:
+        app: messaging-postgres
+    spec:
+      containers:
+        - name: messaging-postgres
+          image: "postgres:16"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: messaging
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: messaging-secrets
+                  key: messaging-db-password
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: messaging-postgresdata
+      volumes:
+        - name: messaging-postgresdata
+          persistentVolumeClaim:
+            claimName: messaging-postgres-volume-claim
