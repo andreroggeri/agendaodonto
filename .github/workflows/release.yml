@@ -104,6 +104,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Echo version
+        run: echo "new_release_version >> ${{ steps.semver.outputs.new_release_version }} \n last_release_version >> ${{ steps.semver.outputs.last_release_version }} \n new_release_published >> ${{ steps.semver.outputs.new_release_published }}"
+
       - name: Strip module name from version
         id: version
         if: steps.semver.outputs.new_release_published == 'true'
@@ -186,7 +189,7 @@ jobs:
       - name: Migrate database
         run: |
           kubectl port-forward service/messaging-postgres 5432:5432 &
-          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging chatbot:${{ steps.version.outputs.version }} npm run db:migrate
+          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging ghcr.io/andreroggeri/chatbot:${{ steps.version.outputs.version }} npm run db:migrate
 
   release-webapp-staging:
     needs: check-changed-apps
