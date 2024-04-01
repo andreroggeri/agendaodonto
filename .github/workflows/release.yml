@@ -175,28 +175,15 @@ jobs:
             }
 
       - name: Create database deployment
-        uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
-        with:
-          args: apply -f chatbot/deployment/postgres
+        run: kubectl apply -f chatbot/deployment/postgres
 
       - name: Create redis deployment
-        uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
-        with:
-          args: apply -f chatbot/deployment/redis
+        run: kubectl apply -f chatbot/deployment/redis
 
       - name: Create app deployment
-        uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
-        with:
-          args: apply -f chatbot/deployment/app
+        run: kubectl apply -f chatbot/deployment/app
 
       - name: Migrate database
-        if: steps.semver.outputs.new_release_published == 'true' || true
         run: |
           kubectl port-forward service/messaging-postgres 5432:5432 &
           docker run --rm -it --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging chatbot:${{ steps.version.outputs.version }} npm run db:migrate
