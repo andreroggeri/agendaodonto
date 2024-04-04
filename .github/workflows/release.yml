@@ -134,26 +134,26 @@ jobs:
               "schedule-api-key": "${{ secrets.SCHEDULE_API_KEY }}",
               "schedule-db-password": "${{ secrets.SCHEDULE_DB_PASSWORD }}",
               "schedule-db-url": "postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@schedule-postgres:5432/schedule",
-              "schedule-django-secret-key": "${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }},
+              "schedule-django-secret-key": "${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }}",
               "messaging-api-key": "${{ secrets.MESSAGING_API_KEY }}"
             }
 
-      - name: Create database deployment
-        run: kubectl apply -f chatbot/deployment/postgres
+      # - name: Create database deployment
+      #   run: kubectl apply -f chatbot/deployment/postgres
 
-      - name: Create redis deployment
-        run: kubectl apply -f chatbot/deployment/redis
+      # - name: Create redis deployment
+      #   run: kubectl apply -f chatbot/deployment/redis
 
-      - name: Create app deployment
-        run: kubectl apply -f chatbot/deployment/app
+      # - name: Create app deployment
+      #   run: kubectl apply -f chatbot/deployment/app
 
-      - name: Wait for deployments
-        run: kubectl wait --for=condition=available --timeout=600s deployment/messaging-postgres deployment/messaging-redis deployment/messaging
+      # - name: Wait for deployments
+      #   run: kubectl wait --for=condition=available --timeout=600s deployment/messaging-postgres deployment/messaging-redis deployment/messaging
 
-      - name: Migrate database
-        run: |
-          kubectl port-forward service/messaging-postgres 5432:5432 &
-          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging ghcr.io/andreroggeri/chatbot:${{ steps.version.outputs.version }} npm run db:migrate
+      # - name: Migrate database
+      #   run: |
+      #     kubectl port-forward service/messaging-postgres 5432:5432 &
+      #     docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging ghcr.io/andreroggeri/chatbot:${{ steps.version.outputs.version }} npm run db:migrate
 
   release-chatbot-staging:
     environment: staging
