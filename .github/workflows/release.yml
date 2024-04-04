@@ -11,6 +11,7 @@ on:
       - ".github/workflows/release.yml"
 concurrency:
   group: release-staging
+
 jobs:
   check-changed-apps:
     runs-on: ubuntu-latest
@@ -56,11 +57,53 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: wireguard
-    if: needs.check-changed-apps.outputs.changed-files-backend == 'true' && false
+    if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Generate a new version
+        id: semver
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          working_directory: "./backend"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Strip module name from version
+        id: version
+        if: steps.semver.outputs.new_release_published == 'true'
+        run: |
+          release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/backend-//')
+          echo "::set-output name=version::$release_version"
+
+      - name: Set up QEMU
+        if: steps.semver.outputs.new_release_published == 'true'
+        uses: docker/setup-qemu-action@v3
+  
+      - name: Set up Docker Buildx
+        if: steps.semver.outputs.new_release_published == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        if: steps.semver.outputs.new_release_published == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Docker build
+        if: steps.semver.outputs.new_release_published == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          platforms: linux/amd64,linux/arm64
+          tags: ghcr.io/andreroggeri/backend:${{ steps.version.outputs.version }},ghcr.io/andreroggeri/backend:latest
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Setup wireguard
         uses: egor-tensin/setup-wireguard@v1
@@ -74,20 +117,50 @@ jobs:
       - name: Check VPN connection
         run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
 
-      - name: Deploy
-        uses: dokku/github-action@master
+      - name: Set context
+        uses: azure/k8s-set-context@v4
         with:
-          branch: "main"
-          git_remote_url: ssh://dokku@${{secrets.STAGING_VPN_IP}}/backend
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
-          git_push_flags: "--force"
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Create secrets
+        uses: Azure/k8s-create-secret@v5
+        with:
+          namespace: default
+          secret-type: generic
+          secret-name: schedule-secrets
+          string-data: |
+            {
+              "schedule-api-key": "${{ secrets.SCHEDULE_API_KEY }}",
+              "schedule-db-password": "${{ secrets.SCHEDULE_DB_PASSWORD }}",
+              "schedule-db-url": "postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@schedule-postgres:5432/schedule",
+              "schedule-django-secret-key": "${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }},
+              "messaging-api-key": "${{ secrets.MESSAGING_API_KEY }}",
+
+            }
+
+      - name: Create database deployment
+        run: kubectl apply -f chatbot/deployment/postgres
+
+      - name: Create redis deployment
+        run: kubectl apply -f chatbot/deployment/redis
+
+      - name: Create app deployment
+        run: kubectl apply -f chatbot/deployment/app
+
+      - name: Wait for deployments
+        run: kubectl wait --for=condition=available --timeout=600s deployment/messaging-postgres deployment/messaging-redis deployment/messaging
+
+      - name: Migrate database
+        run: |
+          kubectl port-forward service/messaging-postgres 5432:5432 &
+          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging ghcr.io/andreroggeri/chatbot:${{ steps.version.outputs.version }} npm run db:migrate
 
   release-chatbot-staging:
     environment: staging
     needs: check-changed-apps
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    if: needs.check-changed-apps.outputs.changed-files-chatbot == 'true'
+    if: needs.check-changed-apps.outputs.changed-files-chatbot == 'true' && false
     concurrency:
       group: wireguard
     steps:
@@ -103,9 +176,6 @@ jobs:
           working_directory: "./chatbot"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Echo version
-        run: echo "new_release_version >> ${{ steps.semver.outputs.new_release_version }} \n last_release_version >> ${{ steps.semver.outputs.last_release_version }} \n new_release_published >> ${{ steps.semver.outputs.new_release_published }}"
 
       - name: Strip module name from version
         id: version
@@ -154,7 +224,6 @@ jobs:
         run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
 
       - name: Set context
-        if: steps.semver.outputs.new_release_published == 'true' || true
         uses: azure/k8s-set-context@v4
         with:
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
@@ -185,6 +254,9 @@ jobs:
 
       - name: Create app deployment
         run: kubectl apply -f chatbot/deployment/app
+
+      - name: Wait for deployments
+        run: kubectl wait --for=condition=available --timeout=600s deployment/messaging-postgres deployment/messaging-redis deployment/messaging
 
       - name: Migrate database
         run: |
