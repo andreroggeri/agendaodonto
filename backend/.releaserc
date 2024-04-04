@@ -1,0 +1,20 @@
+{
+  "branches": [
+    "main",
+    "release",
+    "k8s-deployment"
+  ],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/github",
+      {
+        "successComment": false,
+        "failTitle": false
+      }
+    ]
+  ],
+  "repositoryUrl": "git@github.com:andreroggeri/agendaodonto.git",
+  "tagFormat": "schedule-${version}"
+}
