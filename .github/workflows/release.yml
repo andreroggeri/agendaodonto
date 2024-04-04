@@ -135,8 +135,7 @@ jobs:
               "schedule-db-password": "${{ secrets.SCHEDULE_DB_PASSWORD }}",
               "schedule-db-url": "postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@schedule-postgres:5432/schedule",
               "schedule-django-secret-key": "${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }},
-              "messaging-api-key": "${{ secrets.MESSAGING_API_KEY }}",
-
+              "messaging-api-key": "${{ secrets.MESSAGING_API_KEY }}"
             }
 
       - name: Create database deployment
