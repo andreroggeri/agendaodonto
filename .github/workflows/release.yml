@@ -135,6 +135,8 @@ jobs:
               "schedule-db-password": "${{ secrets.SCHEDULE_DB_PASSWORD }}",
               "schedule-db-url": "postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@schedule-postgres:5432/schedule",
               "schedule-django-secret-key": "${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }}",
+              "schedule-rabbitmq-password": "${{ secrets.SCHEDULE_RABBITMQ_PASSWORD }}",
+              "schedule-rabbitmq-url": "amqp://schedule:${{ secrets.SCHEDULE_RABBITMQ_PASSWORD }}@schedule-rabbitmq:5672",
               "messaging-api-key": "${{ secrets.MESSAGING_API_KEY }}"
             }
 
