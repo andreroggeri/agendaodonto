@@ -101,7 +101,7 @@ jobs:
         with:
           context: ./backend
           platforms: linux/amd64,linux/arm64
-          tags: ghcr.io/andreroggeri/backend:${{ steps.version.outputs.version }},ghcr.io/andreroggeri/backend:latest
+          tags: ghcr.io/andreroggeri/schedule:${{ steps.version.outputs.version }},ghcr.io/andreroggeri/schedule:latest
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
