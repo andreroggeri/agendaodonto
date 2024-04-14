@@ -102,6 +102,16 @@ jobs:
           registry: ghcr.io
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
+      - name: Docker build
+        if: steps.semver.outputs.new_release_published == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.version.outputs.image_version }},ghcr.io/andreroggeri/schedule:latest
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   release-backend:
     needs: build-and-tag-backend
