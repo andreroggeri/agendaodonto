@@ -168,6 +168,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./chatbot
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.version.outputs.image_version }},ghcr.io/andreroggeri/messaging:latest
 
   release-backend:
     needs: build-and-tag-backend
