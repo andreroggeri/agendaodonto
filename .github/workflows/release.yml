@@ -72,7 +72,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Strip module name from version
+      - name: Save version
         id: version
         run: |
           # If the new release is published, strip the module name from the version (steps.semver.outputs.new_release_published)
@@ -82,7 +82,8 @@ jobs:
           else
             release_version=ghcr.io/andreroggeri/schedule:$(echo "${{ steps.semver.outputs.last_release_version }}" | sed 's/schedule-//')
           fi
-          echo "::set-output name=version::$release_version"
+          echo "Version is $release_version"
+          echo "version=$release_version >> $GITHUB_OUTPUT"
 
       - name: Set up QEMU
         if: steps.semver.outputs.new_release_published == 'true'
@@ -149,6 +150,11 @@ jobs:
         run: |
           yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image }}"' backend/deployment/app/deployment.yml
           yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image }}"' backend/deployment/worker/deployment.yml
+
+      - name: Update ingress
+        run: |
+          yq e -i '.spec.rules[0].host = "schedule.staging.agendaodonto.com"' backend/deployment/app/ingress.yml
+          yq e -i '.spec.tls[0].hosts[0] = "schedule.staging.agendaodonto.com"' backend/deployment/app/ingress.yml
 
       - name: Create resources
         run: kubectl apply -f backend/deployment --recursive
@@ -303,8 +309,7 @@ jobs:
   e2e-tests-staging:
     runs-on: ubuntu-latest
     if: false
-    needs:
-      [release-backend, release-chatbot-staging, release-webapp-staging]
+    needs: [release-backend, release-chatbot-staging, release-webapp-staging]
     defaults:
       run:
         working-directory: webapp

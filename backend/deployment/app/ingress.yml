@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: schedule-tls-ingress
+  annotations:
+    spec.ingressClassName: traefik
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirect-https@kubernetescrd
+spec:
+  rules:
+    - host: schedule.staging.agendaodonto.com # Updated in CI/CD pipeline
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: schedule-app
+                port:
+                  number: 8000
+  tls:
+    - secretName: schedule-tls
+      hosts:
+        - schedule.staging.agendaodonto.com # Updated in CI/CD pipeline

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schedule-rabbitmq
+spec:
+  selector:
+    matchLabels:
+      app: schedule-rabbitmq
+  template:
+    metadata:
+      labels:
+        app: schedule-rabbitmq
+        app_context: schedule
+        env: staging
+    spec:
+      containers:
+        - name: schedule-rabbitmq
+          image: "rabbitmq:3.13-management-alpine"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: schedule
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: schedule-secrets
+                  key: schedule-rabbitmq-password
+          volumeMounts:
+            - mountPath: /var/lib/rabbitmq
+              name: schedule-rabbitmqdata
+      volumes:
+        - name: schedule-rabbitmqdata
+          persistentVolumeClaim:
+            claimName: schedule-rabbitmq-volume-claim
