@@ -9,6 +9,7 @@ on:
       - "chatbot/**"
       - "webapp/**"
       - ".github/workflows/release.yml"
+
 concurrency:
   group: release-staging
 
@@ -51,13 +52,12 @@ jobs:
             webapp/**
             .github/**
 
-  release-backend-staging:
+  build-and-tag-backend:
     needs: check-changed-apps
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    environment: staging
-    concurrency:
-      group: wireguard
+    outputs:
+      image: ${{ steps.version.outputs.version }}
     if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
     steps:
       - uses: actions/checkout@v3
@@ -74,9 +74,14 @@ jobs:
 
       - name: Strip module name from version
         id: version
-        if: steps.semver.outputs.new_release_published == 'true'
         run: |
-          release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/backend-//')
+          # If the new release is published, strip the module name from the version (steps.semver.outputs.new_release_published)
+          # Otherwise use the previous version (last_relsteps.semver.outputs.last_release_version)
+          if [ "${{ steps.semver.outputs.new_release_published }}" == "true" ]; then
+            release_version=ghcr.io/andreroggeri/schedule:$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/schedule-//')
+          else
+            release_version=ghcr.io/andreroggeri/schedule:$(echo "${{ steps.semver.outputs.last_release_version }}" | sed 's/schedule-//')
+          fi
           echo "::set-output name=version::$release_version"
 
       - name: Set up QEMU
@@ -95,16 +100,17 @@ jobs:
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
 
-      - name: Docker build
-        if: steps.semver.outputs.new_release_published == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          platforms: linux/amd64,linux/arm64
-          tags: ghcr.io/andreroggeri/schedule:${{ steps.version.outputs.version }},ghcr.io/andreroggeri/schedule:latest
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+  release-backend:
+    needs: build-and-tag-backend
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency:
+      group: wireguard
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: frenck/action-setup-yq@v1
 
       - name: Setup wireguard
         uses: egor-tensin/setup-wireguard@v1
@@ -139,23 +145,21 @@ jobs:
               "schedule-rabbitmq-url": "amqp://schedule:${{ secrets.SCHEDULE_RABBITMQ_PASSWORD }}@schedule-rabbitmq:5672",
               "messaging-api-key": "${{ secrets.MESSAGING_API_KEY }}"
             }
+      - name: Update deployment version
+        run: |
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image }}"' backend/deployment/app/deployment.yml
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image }}"' backend/deployment/worker/deployment.yml
 
-      # - name: Create database deployment
-      #   run: kubectl apply -f chatbot/deployment/postgres
+      - name: Create resources
+        run: kubectl apply -f backend/deployment --recursive
 
-      # - name: Create redis deployment
-      #   run: kubectl apply -f chatbot/deployment/redis
+      - name: Wait for deployments
+        run: kubectl wait --for=condition=available deployment/schedule-app deployment/schedule-worker deployment/schedule-postgres deployment/schedule-rabbitmq
 
-      # - name: Create app deployment
-      #   run: kubectl apply -f chatbot/deployment/app
-
-      # - name: Wait for deployments
-      #   run: kubectl wait --for=condition=available --timeout=600s deployment/messaging-postgres deployment/messaging-redis deployment/messaging
-
-      # - name: Migrate database
-      #   run: |
-      #     kubectl port-forward service/messaging-postgres 5432:5432 &
-      #     docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging ghcr.io/andreroggeri/chatbot:${{ steps.version.outputs.version }} npm run db:migrate
+      - name: Migrate database
+        run: |
+          kubectl port-forward service/schedule-postgres 5432:5432 &
+          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@localhost:5432/schedule ${{ needs.build-and-tag-backend.outputs.image }} python manage.py migrate --no-input
 
   release-chatbot-staging:
     environment: staging
@@ -300,7 +304,7 @@ jobs:
     runs-on: ubuntu-latest
     if: false
     needs:
-      [release-backend-staging, release-chatbot-staging, release-webapp-staging]
+      [release-backend, release-chatbot-staging, release-webapp-staging]
     defaults:
       run:
         working-directory: webapp
