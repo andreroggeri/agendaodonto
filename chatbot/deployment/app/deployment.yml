@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: messaging-app
-          image: ghcr.io/andreroggeri/chatbot:1.2.0
+          image: ghcr.io/andreroggeri/messaging:latest # Updated in CI/CD pipeline
           ports:
             - containerPort: 3000
           env:

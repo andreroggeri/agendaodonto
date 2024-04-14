@@ -169,7 +169,11 @@ jobs:
         with:
           context: ./chatbot
           platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.version.outputs.image_version }},ghcr.io/andreroggeri/messaging:latest
+          tags: ${{ steps.version.outputs.image_version }},ghcr.io/andreroggeri/schedule:latest
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
 
   release-backend:
     needs: build-and-tag-backend
