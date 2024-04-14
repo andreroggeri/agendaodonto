@@ -85,7 +85,7 @@ jobs:
           image_version="ghcr.io/andreroggeri/schedule:$release_version"
           echo "Version is $release_version"
           echo "Image version is $image_version"
-          echo "image_version=$image_version >> $GITHUB_OUTPUT"
+          echo "image_version=$image_version" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         if: steps.semver.outputs.new_release_published == 'true'
@@ -150,6 +150,7 @@ jobs:
             }
       - name: Update deployment version
         run: |
+          echo "Image version is ${{ needs.build-and-tag-backend.outputs.image_version }}"
           yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image_version }}"' backend/deployment/app/deployment.yml
           yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image_version }}"' backend/deployment/worker/deployment.yml
 
