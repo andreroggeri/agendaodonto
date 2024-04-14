@@ -236,7 +236,7 @@ jobs:
           kubectl port-forward service/schedule-postgres 5432:5432 &
           docker run --rm --network host -e DJANGO_SECRET_KEY=${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }} -e DJANGO_SETTINGS_MODULE=app.settings.staging -e DATABASE_URL=postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@localhost:5432/schedule ${{ needs.build-and-tag-backend.outputs.image_version }} python manage.py migrate --no-input
 
-  release-chatbot:
+  release-messaging:
     environment: staging
     needs: build-and-tag-messaging
     timeout-minutes: 10
@@ -285,7 +285,7 @@ jobs:
         run: kubectl apply -f chatbot/deployment --recursive
 
       - name: Wait for deployments
-        run: kubectl wait --for=condition=available --timeout=600s deployment/messaging-postgres deployment/messaging-redis deployment/messaging
+        run: kubectl wait --for=condition=available --timeout=600s deployment/messaging-postgres deployment/messaging-redis deployment/messaging-app
 
       - name: Migrate database
         run: |
@@ -326,7 +326,7 @@ jobs:
   e2e-tests-staging:
     runs-on: ubuntu-latest
     if: false
-    needs: [release-backend, release-chatbot, release-webapp-staging]
+    needs: [release-backend, release-messaging, release-webapp-staging]
     defaults:
       run:
         working-directory: webapp
