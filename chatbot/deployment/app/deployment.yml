@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: chatbot
+  name: messaging-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: chatbot
+      app: messaging-app
   template:
     metadata:
       labels:
-        app: chatbot
+        app: messaging-app
     spec:
       containers:
-        - name: chatbot
+        - name: messaging-app
           image: ghcr.io/andreroggeri/chatbot:1.2.0
           ports:
             - containerPort: 3000
