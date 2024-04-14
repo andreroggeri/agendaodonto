@@ -113,6 +113,62 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  build-and-tag-messaging:
+    needs: check-changed-apps
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    outputs:
+      image_version: ${{ steps.version.outputs.image_version }}
+    if: needs.check-changed-apps.outputs.changed-files-chatbot == 'true'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Generate a new version
+        id: semver
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          working_directory: "./chatbot"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save version
+        id: version
+        run: |
+          # If the new release is published, strip the module name from the version (steps.semver.outputs.new_release_published)
+          # Otherwise use the previous version (last_relsteps.semver.outputs.last_release_version)
+          if [ "${{ steps.semver.outputs.new_release_published }}" == "true" ]; then
+            release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/messaging-//')
+          else
+            release_version=$(echo "${{ steps.semver.outputs.last_release_version }}" | sed 's/messaging-//')
+          fi
+          image_version="ghcr.io/andreroggeri/messaging:$release_version"
+          echo "Version is $release_version"
+          echo "Image version is $image_version"
+          echo "image_version=$image_version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        if: steps.semver.outputs.new_release_published == 'true'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: steps.semver.outputs.new_release_published == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        if: steps.semver.outputs.new_release_published == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+      - name: Docker build
+        if: steps.semver.outputs.new_release_published == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./chatbot
+
   release-backend:
     needs: build-and-tag-backend
     timeout-minutes: 10
@@ -180,61 +236,15 @@ jobs:
           kubectl port-forward service/schedule-postgres 5432:5432 &
           docker run --rm --network host -e DJANGO_SECRET_KEY=${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }} -e DJANGO_SETTINGS_MODULE=app.settings.staging -e DATABASE_URL=postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@localhost:5432/schedule ${{ needs.build-and-tag-backend.outputs.image_version }} python manage.py migrate --no-input
 
-  release-chatbot-staging:
+  release-chatbot:
     environment: staging
-    needs: check-changed-apps
+    needs: build-and-tag-messaging
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    if: needs.check-changed-apps.outputs.changed-files-chatbot == 'true' && false
     concurrency:
       group: wireguard
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-
-      - name: Generate a new version
-        id: semver
-        uses: cycjimmy/semantic-release-action@v4
-        with:
-          working_directory: "./chatbot"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Strip module name from version
-        id: version
-        if: steps.semver.outputs.new_release_published == 'true'
-        run: |
-          release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/chatbot-//')
-          echo "::set-output name=version::$release_version"
-
-      - name: Set up QEMU
-        if: steps.semver.outputs.new_release_published == 'true'
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        if: steps.semver.outputs.new_release_published == 'true'
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        if: steps.semver.outputs.new_release_published == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{github.actor}}
-          password: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Docker build
-        if: steps.semver.outputs.new_release_published == 'true'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./chatbot
-          platforms: linux/amd64,linux/arm64
-          tags: ghcr.io/andreroggeri/chatbot:${{ steps.version.outputs.version }},ghcr.io/andreroggeri/chatbot:latest
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Setup wireguard
         uses: egor-tensin/setup-wireguard@v1
@@ -271,14 +281,8 @@ jobs:
               "messaging-google-recog-api-key": "${{ secrets.MESSAGING_GOOGLE_RECOG_API_KEY }}"
             }
 
-      - name: Create database deployment
-        run: kubectl apply -f chatbot/deployment/postgres
-
-      - name: Create redis deployment
-        run: kubectl apply -f chatbot/deployment/redis
-
-      - name: Create app deployment
-        run: kubectl apply -f chatbot/deployment/app
+      - name: Create resources
+        run: kubectl apply -f chatbot/deployment --recursive
 
       - name: Wait for deployments
         run: kubectl wait --for=condition=available --timeout=600s deployment/messaging-postgres deployment/messaging-redis deployment/messaging
@@ -290,7 +294,7 @@ jobs:
 
   release-webapp-staging:
     needs: check-changed-apps
-    if: needs.check-changed-apps.outputs.changed-files-webapp == 'true' && false
+    if: needs.check-changed-apps.outputs.changed-files-webapp == 'true'
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
@@ -322,7 +326,7 @@ jobs:
   e2e-tests-staging:
     runs-on: ubuntu-latest
     if: false
-    needs: [release-backend, release-chatbot-staging, release-webapp-staging]
+    needs: [release-backend, release-chatbot, release-webapp-staging]
     defaults:
       run:
         working-directory: webapp
