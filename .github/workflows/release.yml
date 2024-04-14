@@ -178,7 +178,7 @@ jobs:
       - name: Migrate database
         run: |
           kubectl port-forward service/schedule-postgres 5432:5432 &
-          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@localhost:5432/schedule ${{ needs.build-and-tag-backend.outputs.image_version }} python manage.py migrate --no-input
+          docker run --rm --network host -e DJANGO_SECRET_KEY=${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }} -e DJANGO_SETTINGS_MODULE=app.settings.staging -e DATABASE_URL=postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@localhost:5432/schedule ${{ needs.build-and-tag-backend.outputs.image_version }} python manage.py migrate --no-input
 
   release-chatbot-staging:
     environment: staging
