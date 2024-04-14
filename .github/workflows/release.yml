@@ -246,6 +246,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - uses: frenck/action-setup-yq@v1
+
       - name: Setup wireguard
         uses: egor-tensin/setup-wireguard@v1
         with:
@@ -280,6 +282,10 @@ jobs:
               "schedule-api-key": "${{ secrets.SCHEDULE_API_KEY }}",
               "messaging-google-recog-api-key": "${{ secrets.MESSAGING_GOOGLE_RECOG_API_KEY }}"
             }
+      - name: Update deployment version
+        run: |
+          echo "Image version is ${{ needs.build-and-tag-messaging.outputs.image_version }}"
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-messaging.outputs.image_version }}"' chatbot/deployment/app/deployment.yml
 
       - name: Create resources
         run: kubectl apply -f chatbot/deployment --recursive
@@ -290,7 +296,7 @@ jobs:
       - name: Migrate database
         run: |
           kubectl port-forward service/messaging-postgres 5432:5432 &
-          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging ghcr.io/andreroggeri/chatbot:${{ steps.version.outputs.version }} npm run db:migrate
+          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging ${{ needs.build-and-tag-messaging.outputs.image_version }} npm run db:migrate
 
   release-webapp-staging:
     needs: check-changed-apps
