@@ -84,7 +84,7 @@ jobs:
           fi
           image_version="ghcr.io/andreroggeri/schedule:$release_version"
           echo "Version is $release_version"
-          ehco "Image version is $image_version"
+          echo "Image version is $image_version"
           echo "image_version=$image_version >> $GITHUB_OUTPUT"
 
       - name: Set up QEMU
