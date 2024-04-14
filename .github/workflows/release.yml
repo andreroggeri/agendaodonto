@@ -57,7 +57,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     outputs:
-      image: ${{ steps.version.outputs.version }}
+      image_version: ${{ steps.version.outputs.image_version }}
     if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
     steps:
       - uses: actions/checkout@v3
@@ -78,12 +78,14 @@ jobs:
           # If the new release is published, strip the module name from the version (steps.semver.outputs.new_release_published)
           # Otherwise use the previous version (last_relsteps.semver.outputs.last_release_version)
           if [ "${{ steps.semver.outputs.new_release_published }}" == "true" ]; then
-            release_version=ghcr.io/andreroggeri/schedule:$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/schedule-//')
+            release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/schedule-//')
           else
-            release_version=ghcr.io/andreroggeri/schedule:$(echo "${{ steps.semver.outputs.last_release_version }}" | sed 's/schedule-//')
+            release_version=$(echo "${{ steps.semver.outputs.last_release_version }}" | sed 's/schedule-//')
           fi
+          image_version="ghcr.io/andreroggeri/schedule:$release_version"
           echo "Version is $release_version"
-          echo "version=$release_version >> $GITHUB_OUTPUT"
+          ehco "Image version is $image_version"
+          echo "image_version=$image_version >> $GITHUB_OUTPUT"
 
       - name: Set up QEMU
         if: steps.semver.outputs.new_release_published == 'true'
@@ -148,8 +150,8 @@ jobs:
             }
       - name: Update deployment version
         run: |
-          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image }}"' backend/deployment/app/deployment.yml
-          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image }}"' backend/deployment/worker/deployment.yml
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image_version }}"' backend/deployment/app/deployment.yml
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image_version }}"' backend/deployment/worker/deployment.yml
 
       - name: Update ingress
         run: |
@@ -165,7 +167,7 @@ jobs:
       - name: Migrate database
         run: |
           kubectl port-forward service/schedule-postgres 5432:5432 &
-          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@localhost:5432/schedule ${{ needs.build-and-tag-backend.outputs.image }} python manage.py migrate --no-input
+          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@localhost:5432/schedule ${{ needs.build-and-tag-backend.outputs.image_version }} python manage.py migrate --no-input
 
   release-chatbot-staging:
     environment: staging
