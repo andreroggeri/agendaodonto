@@ -76,11 +76,11 @@ jobs:
         id: version
         run: |
           # If the new release is published, strip the module name from the version (steps.semver.outputs.new_release_published)
-          # Otherwise use the previous version (last_relsteps.semver.outputs.last_release_version)
+          # Otherwise use latest one available through git tags
           if [ "${{ steps.semver.outputs.new_release_published }}" == "true" ]; then
             release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/schedule-//')
           else
-            release_version=$(echo "${{ steps.semver.outputs.last_release_version }}" | sed 's/schedule-//')
+            release_version=$(git tag -l 'schedule-*' | sort -V | tail -n 1 | sed 's/schedule-//')
           fi
           image_version="ghcr.io/andreroggeri/schedule:$release_version"
           echo "Version is $release_version"
@@ -173,7 +173,6 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
 
   release-backend:
     needs: build-and-tag-backend
