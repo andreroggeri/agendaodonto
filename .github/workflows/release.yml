@@ -137,11 +137,12 @@ jobs:
         id: version
         run: |
           # If the new release is published, strip the module name from the version (steps.semver.outputs.new_release_published)
-          # Otherwise use the previous version (last_relsteps.semver.outputs.last_release_version)
+          # Otherwise use the latest one available through git tags
           if [ "${{ steps.semver.outputs.new_release_published }}" == "true" ]; then
+            echo "New release version is ${{ steps.semver.outputs.new_release_version }}"
             release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/messaging-//')
           else
-            release_version=$(echo "${{ steps.semver.outputs.last_release_version }}" | sed 's/messaging-//')
+            release_version=$(git tag -l 'chatbot-*' | sort -V | tail -n 1 | sed 's/chatbot-//')
           fi
           image_version="ghcr.io/andreroggeri/messaging:$release_version"
           echo "Version is $release_version"
