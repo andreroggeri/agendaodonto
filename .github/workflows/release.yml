@@ -151,9 +151,9 @@ jobs:
         run: |
           echo "Checking if image already exists"
           if docker pull ${{needs.create-schedule-release.outputs.container_image}}; then
-            echo "check-image-exists=true" >> $GITHUB_ENV
+            echo "check-image-exists=true" >> $GITHUB_OUTPUT
           else
-            echo "check-image-exists=false" >> $GITHUB_ENV
+            echo "check-image-exists=false" >> $GITHUB_OUTPUT
           fi
 
       - name: debug
@@ -198,9 +198,9 @@ jobs:
         run: |
           echo "Checking if image already exists"
           if docker pull ${{needs.create-messaging-release.outputs.container_image}}; then
-            echo "check-image-exists=true" >> $GITHUB_ENV
+            echo "check-image-exists=true" >> $GITHUB_OUTPUT
           else
-            echo "check-image-exists=false" >> $GITHUB_ENV
+            echo "check-image-exists=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Docker build
