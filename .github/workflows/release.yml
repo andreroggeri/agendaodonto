@@ -52,82 +52,15 @@ jobs:
             webapp/**
             .github/**
 
-  build-and-tag-backend:
-    needs: check-changed-apps
-    timeout-minutes: 10
+  create-messaging-release:
     runs-on: ubuntu-latest
-    outputs:
-      image_version: ${{ steps.version.outputs.image_version }}
-    if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Generate a new version
-        id: semver
-        uses: cycjimmy/semantic-release-action@v4
-        with:
-          working_directory: "./backend"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Save version
-        id: version
-        run: |
-          # If the new release is published, strip the module name from the version (steps.semver.outputs.new_release_published)
-          # Otherwise use latest one available through git tags
-          if [ "${{ steps.semver.outputs.new_release_published }}" == "true" ]; then
-            release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/schedule-//')
-          else
-            release_version=$(git tag -l 'schedule-*' | sort -V | tail -n 1 | sed 's/schedule-//')
-          fi
-          image_version="ghcr.io/andreroggeri/schedule:$release_version"
-          echo "Version is $release_version"
-          echo "Image version is $image_version"
-          echo "image_version=$image_version" >> "$GITHUB_OUTPUT"
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{github.actor}}
-          password: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Check if docker image already exists
-        id: check-image-exists
-        run: |
-          echo "Checking if image already exists"
-          if docker pull ghcr.io/andreroggeri/${{steps.version.outputs.image_version}}; then
-            echo "check-image-exists=true" >> $GITHUB_ENV
-          else
-            echo "check-image-exists=false" >> $GITHUB_ENV
-          fi
-
-      - name: Docker build
-        if: steps.check-image-exists.outputs.check-image-exists == 'false'
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.version.outputs.image_version }},ghcr.io/andreroggeri/schedule:latest
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  build-and-tag-messaging:
     needs: check-changed-apps
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
-    outputs:
-      image_version: ${{ steps.version.outputs.image_version }}
     if: needs.check-changed-apps.outputs.changed-files-chatbot == 'true'
+    concurrency:
+      group: create-release
+    outputs:
+      container_image: ${{ steps.version.outputs.container_image }}
+      release_version: ${{ steps.version.outputs.release_version }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -152,10 +85,53 @@ jobs:
           else
             release_version=$(git tag -l 'chatbot-*' | sort -V | tail -n 1 | sed 's/chatbot-//')
           fi
-          image_version="ghcr.io/andreroggeri/messaging:$release_version"
           echo "Version is $release_version"
-          echo "Image version is $image_version"
-          echo "image_version=$image_version" >> "$GITHUB_OUTPUT"
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+          echo "container_image=ghcr.io/andreroggeri/messaging:$release_version" >> "$GITHUB_OUTPUT"
+
+  create-schedule-release:
+    runs-on: ubuntu-latest
+    needs: check-changed-apps
+    concurrency:
+      group: create-release
+    if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
+    outputs:
+      container_image: ${{ steps.version.outputs.container_image }}
+      release_version: ${{ steps.version.outputs.release_version }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Generate a new version
+        id: semver
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          working_directory: "./backend"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save version
+        id: version
+        run: |
+          # If the new release is published, strip the module name from the version (steps.semver.outputs.new_release_published)
+          # Otherwise use the latest one available through git tags
+          if [ "${{ steps.semver.outputs.new_release_published }}" == "true" ]; then
+            echo "New release version is ${{ steps.semver.outputs.new_release_version }}"
+            release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/schedule-//')
+          else
+            release_version=$(git tag -l 'schedule-*' | sort -V | tail -n 1 | sed 's/schedule-//')
+          fi
+          echo "Version is $release_version"
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+          echo "container_image=ghcr.io/andreroggeri/schedule:$release_version" >> "$GITHUB_OUTPUT"
+
+  build-and-tag-schedule:
+    needs: create-schedule-release
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -174,7 +150,54 @@ jobs:
         id: check-image-exists
         run: |
           echo "Checking if image already exists"
-          if docker pull ghcr.io/andreroggeri/${{steps.version.outputs.image_version}}; then
+          if docker pull ${{needs.create-schedule-release.outputs.container_image}}; then
+            echo "check-image-exists=true" >> $GITHUB_ENV
+          else
+            echo "check-image-exists=false" >> $GITHUB_ENV
+          fi
+
+      - name: debug
+        run: |
+          echo "check-image-exists: ${{ steps.check-image-exists.outputs.check-image-exists }}"
+          echo "release_version: ${{ needs.create-schedule-release.outputs.release_version }}"
+          echo "container_image: ${{ needs.create-schedule-release.outputs.container_image }}"
+
+      - name: Docker build
+        if: steps.check-image-exists.outputs.check-image-exists == 'false'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ needs.create-schedule-release.outputs.release_version }},ghcr.io/andreroggeri/schedule:latest
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-and-tag-messaging:
+    needs: create-messaging-release
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Check if docker image already exists
+        id: check-image-exists
+        run: |
+          echo "Checking if image already exists"
+          if docker pull ${{needs.create-messaging-release.outputs.container_image}}; then
             echo "check-image-exists=true" >> $GITHUB_ENV
           else
             echo "check-image-exists=false" >> $GITHUB_ENV
@@ -186,13 +209,13 @@ jobs:
         with:
           context: ./chatbot
           platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.version.outputs.image_version }},ghcr.io/andreroggeri/messaging:latest
+          tags: ${{ needs.create-messaging-release.outputs.container_image }},ghcr.io/andreroggeri/messaging:latest
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  release-backend:
-    needs: build-and-tag-backend
+  release-schedule:
+    needs: build-and-tag-schedule
     timeout-minutes: 10
     runs-on: ubuntu-latest
     environment: staging
@@ -353,8 +376,7 @@ jobs:
 
   e2e-tests-staging:
     runs-on: ubuntu-latest
-    if: false
-    needs: [release-backend, release-messaging, release-webapp-staging]
+    needs: [release-schedule, release-messaging, release-webapp-staging]
     defaults:
       run:
         working-directory: webapp
