@@ -88,22 +88,30 @@ jobs:
           echo "image_version=$image_version" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
-        if: steps.semver.outputs.new_release_published == 'true'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        if: steps.semver.outputs.new_release_published == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
-        if: steps.semver.outputs.new_release_published == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Check if docker image already exists
+        id: check-image-exists
+        run: |
+          echo "Checking if image already exists"
+          if docker pull ghcr.io/andreroggeri/${{steps.version.outputs.image_version}}; then
+            echo "check-image-exists=true" >> $GITHUB_ENV
+          else
+            echo "check-image-exists=false" >> $GITHUB_ENV
+          fi
+
       - name: Docker build
-        if: steps.semver.outputs.new_release_published == 'true'
+        if: steps.check-image-exists.outputs.check-image-exists == 'false'
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -150,22 +158,30 @@ jobs:
           echo "image_version=$image_version" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
-        if: steps.semver.outputs.new_release_published == 'true'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        if: steps.semver.outputs.new_release_published == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
-        if: steps.semver.outputs.new_release_published == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Check if docker image already exists
+        id: check-image-exists
+        run: |
+          echo "Checking if image already exists"
+          if docker pull ghcr.io/andreroggeri/${{steps.version.outputs.image_version}}; then
+            echo "check-image-exists=true" >> $GITHUB_ENV
+          else
+            echo "check-image-exists=false" >> $GITHUB_ENV
+          fi
+
       - name: Docker build
-        if: steps.semver.outputs.new_release_published == 'true'
+        if: steps.check-image-exists.outputs.check-image-exists == 'false'
         uses: docker/build-push-action@v5
         with:
           context: ./chatbot
