@@ -18,7 +18,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: messaging
+  name: messaging-postgres-backup-volume
   labels:
     type: local
     app: messaging-postgres-backup

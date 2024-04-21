@@ -136,10 +136,6 @@ jobs:
         run: |
           echo "container_image=ghcr.io/andreroggeri/schedule:${{ needs.create-schedule-release.outputs.release_version }}" >> "$GITHUB_OUTPUT"
 
-      - name: debug
-        run: |
-          echo "container_image: ${{ steps.image-version.outputs.container_image }}"
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -163,19 +159,13 @@ jobs:
             echo "check-image-exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: debug
-        run: |
-          echo "check-image-exists: ${{ steps.check-image-exists.outputs.check-image-exists }}"
-          echo "release_version: ${{ needs.create-schedule-release.outputs.release_version }}"
-          echo "container_image: ${{ steps.image-version.outputs.container_image }}"
-
       - name: Docker build
         if: steps.check-image-exists.outputs.check-image-exists == 'false'
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.image-version.outputs.container_image}},ghcr.io/andreroggeri/schedule:latest
+          tags: ${{ steps.image-version.outputs.container_image }},ghcr.io/andreroggeri/schedule:latest
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max

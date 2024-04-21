@@ -23,7 +23,6 @@ metadata:
   labels:
     type: local
     app: schedule-postgres-backup
-    app_context: schedule
     env: staging
 spec:
   storageClassName: manual
