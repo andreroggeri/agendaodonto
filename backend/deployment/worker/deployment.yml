@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: schedule-worker
+  labels:
+    app: schedule
+    env: staging
 spec:
   replicas: 1
   selector:
@@ -11,8 +14,6 @@ spec:
     metadata:
       labels:
         app: schedule-worker
-        app_context: schedule
-        env: staging
     spec:
       containers:
         - name: schedule-worker

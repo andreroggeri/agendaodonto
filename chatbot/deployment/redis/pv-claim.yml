@@ -3,7 +3,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: messaging-redis-volume-claim
   labels:
-    app: messaging-redis
+    app: messaging
+    env: staging
 spec:
   storageClassName: manual
   accessModes:

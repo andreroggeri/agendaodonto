@@ -3,8 +3,7 @@ kind: Service
 metadata:
   name: schedule-rabbitmq
   labels:
-    app: schedule-rabbitmq
-    app_context: schedule
+    app: schedule
     env: staging
 spec:
   ports:

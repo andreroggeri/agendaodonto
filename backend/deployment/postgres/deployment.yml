@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: schedule-postgres
+  labels:
+    app: schedule
+    env: staging
 spec:
   selector:
     matchLabels:
@@ -10,8 +13,6 @@ spec:
     metadata:
       labels:
         app: schedule-postgres
-        app_context: schedule
-        env: staging
     spec:
       containers:
         - name: schedule-postgres

@@ -3,7 +3,23 @@ kind: PersistentVolumeClaim
 metadata:
   name: messaging-postgres-volume-claim
   labels:
-    app: messaging-postgres
+    app: messaging
+    env: staging
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: messaging-postgres-backup-volume-claim
+  labels:
+    app: messaging
+    env: staging
 spec:
   storageClassName: manual
   accessModes:

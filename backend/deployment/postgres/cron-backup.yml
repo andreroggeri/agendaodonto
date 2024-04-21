@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: schedule-postgres-backup
+  labels:
+    app: schedule
+    app_context: schedule
+    env: staging
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: db-backup
+              image: postgres:16
+              command:
+                - /bin/sh
+                - -c
+                - pg_dump -h schedule-postgres.default.svc.cluster.local -U postgres -d schedule -f /backup/schedule-db-backup-$(date +'%s').sql
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: schedule-secrets
+                      key: schedule-db-password
+              volumeMounts:
+                - name: schedule-postgres-backup-volume
+                  mountPath: /backup
+          volumes:
+            - name: schedule-postgres-backup-volume
+              persistentVolumeClaim:
+                claimName: schedule-postgres-backup-volume-claim
+
+          restartPolicy: Never

@@ -3,8 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: schedule-rabbitmq-volume-claim
   labels:
-    app: schedule-rabbitmq
-    app_context: schedule
+    app: schedule
     env: staging
 spec:
   storageClassName: manual

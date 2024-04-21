@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: schedule-app
+  labels:
+    app: schedul
+    env: staging
 spec:
   replicas: 1
   selector:
@@ -11,8 +14,6 @@ spec:
     metadata:
       labels:
         app: schedule-app
-        app_context: schedule
-        env: staging
     spec:
       containers:
         - name: schedule-app
@@ -42,4 +43,3 @@ spec:
                   key: schedule-rabbitmq-url
             - name: DJANGO_SETTINGS_MODULE
               value: app.settings.staging # TODO: Use a single config file
-              

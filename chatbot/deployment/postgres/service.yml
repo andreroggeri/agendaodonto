@@ -3,7 +3,8 @@ kind: Service
 metadata:
   name: messaging-postgres
   labels:
-    app: messaging-postgres
+    app: messaging
+    env: staging
 spec:
   ports:
     - port: 5432

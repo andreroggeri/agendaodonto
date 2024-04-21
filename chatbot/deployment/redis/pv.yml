@@ -4,7 +4,8 @@ metadata:
   name: messaging-redis-volume
   labels:
     type: local
-    app: messaging-redis
+    app: messaging
+    env: staging
 spec:
   storageClassName: manual
   capacity:

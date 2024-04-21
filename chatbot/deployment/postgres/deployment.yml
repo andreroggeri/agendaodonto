@@ -2,6 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: messaging-postgres
+  labels:
+    app: messaging
+    env: staging
 spec:
   selector:
     matchLabels:

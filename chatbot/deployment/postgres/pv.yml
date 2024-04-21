@@ -4,7 +4,8 @@ metadata:
   name: messaging-postgres-volume
   labels:
     type: local
-    app: messaging-postgres
+    app: messaging
+    env: staging
 spec:
   storageClassName: manual
   capacity:
@@ -13,3 +14,21 @@ spec:
     - ReadWriteMany
   hostPath:
     path: /data/messaging-postgresql
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: messaging
+  labels:
+    type: local
+    app: messaging-postgres-backup
+    app_context: messaging
+    env: staging
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /nfs_mount/messaging-postgresql-backup

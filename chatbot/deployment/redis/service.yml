@@ -3,7 +3,8 @@ kind: Service
 metadata:
   name: messaging-redis
   labels:
-    app: messaging-redis
+    app: messaging
+    env: staging
 spec:
   ports:
     - port: 6379

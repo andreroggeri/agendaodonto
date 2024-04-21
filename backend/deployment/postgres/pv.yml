@@ -4,8 +4,7 @@ metadata:
   name: schedule-postgres-volume
   labels:
     type: local
-    app: schedule-postgres
-    app_context: schedule
+    app: schedule
     env: staging
 spec:
   storageClassName: manual
@@ -15,3 +14,22 @@ spec:
     - ReadWriteMany
   hostPath:
     path: /data/schedule-postgresql
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: schedule
+  labels:
+    type: local
+    app: schedule-postgres-backup
+    app_context: schedule
+    env: staging
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /nfs_mount/schedule-postgresql-backup

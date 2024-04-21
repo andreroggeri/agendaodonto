@@ -4,8 +4,7 @@ metadata:
   name: schedule-rabbitmq-volume
   labels:
     type: local
-    app: schedule-rabbitmq
-    app_context: schedule
+    app: schedule
     env: staging
 spec:
   storageClassName: manual

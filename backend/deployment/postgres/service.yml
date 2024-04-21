@@ -3,8 +3,7 @@ kind: Service
 metadata:
   name: schedule-postgres
   labels:
-    app: schedule-postgres
-    app_context: schedule
+    app: schedule
     env: staging
 spec:
   ports:
