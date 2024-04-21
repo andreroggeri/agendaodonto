@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: messaging-postgres-backup
+  labels:
+    app: messaging
+    app_context: messaging
+    env: staging
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: db-backup
+              image: postgres:16
+              command:
+                - /bin/sh
+                - -c
+                - pg_dump -h messaging-postgres.default.svc.cluster.local -U postgres -d messaging -f /backup/messaging-db-backup-$(date +'%s').sql
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: messaging-secrets
+                      key: messaging-db-password
+              volumeMounts:
+                - name: messaging-postgres-backup-volume
+                  mountPath: /backup
+          volumes:
+            - name: messaging-postgres-backup-volume
+              persistentVolumeClaim:
+                claimName: messaging-postgres-backup-volume-claim
+
+          restartPolicy: Never

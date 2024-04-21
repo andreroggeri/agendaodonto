@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: schedule-app
+  labels:
+    app: schedule
+    env: staging
+spec:
+  selector:
+    app: schedule-app
+  ports:
+    - port: 8000

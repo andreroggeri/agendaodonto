@@ -7,7 +7,8 @@
     "dev": "tsnd -r dotenv/config src/bot.ts",
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "db:migrate": "prisma migrate deploy"
   },
   "repository": {
     "type": "git",

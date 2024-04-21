@@ -19,7 +19,7 @@ DJOSER = {
 }
 
 # Celery Settings
-CELERY_BROKER_URL = os.environ['RABBITMQ_URL']
+CELERY_BROKER_URL = os.getenv('RABBITMQ_URL', None)
 CELERY_BROKER_HEARTBEAT = None
 
 MESSAGE_ETA = {'hour': 0, 'minute': 0}

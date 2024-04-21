@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: messaging-postgres
+  labels:
+    app: messaging
+    env: staging
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: messaging-postgres
