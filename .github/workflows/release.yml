@@ -131,9 +131,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - id: image-version
+      - name: Save container image version
+        id: image-version
         run: |
-          echo "container_image=ghcr.io/andreroggeri/schedule:${{ needs.create-schedule-release.outputs.release_version }} >> $GITHUB_OUTPUT"
+          echo "container_image=ghcr.io/andreroggeri/schedule:${{ needs.create-schedule-release.outputs.release_version }}" >> "$GITHUB_OUTPUT"
+
+      - name: debug
+        run: |
+          echo "container_image: ${{ steps.image-version.outputs.container_image }}"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -186,7 +191,7 @@ jobs:
 
       - id: image-version
         run: |
-          echo "container_image=ghcr.io/andreroggeri/messaging:${{ needs.create-messaging-release.outputs.release_version }} >> $GITHUB_OUTPUT"
+          echo "container_image=ghcr.io/andreroggeri/messaging:${{ needs.create-messaging-release.outputs.release_version }}" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -282,7 +287,7 @@ jobs:
         run: kubectl apply -f backend/deployment --recursive
 
       - name: Wait for deployments
-        run: kubectl wait --for=condition=available deployment/schedule-app deployment/schedule-worker deployment/schedule-postgres deployment/schedule-rabbitmq
+        run: kubectl wait --for=condition=available --timeout=600s deployment/schedule-app deployment/schedule-worker deployment/schedule-postgres deployment/schedule-rabbitmq
 
       - name: Migrate database
         run: |
