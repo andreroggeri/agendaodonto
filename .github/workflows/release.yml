@@ -59,7 +59,6 @@ jobs:
     concurrency:
       group: create-release
     outputs:
-      container_image: ${{ steps.version.outputs.container_image }}
       release_version: ${{ steps.version.outputs.release_version }}
     steps:
       - uses: actions/checkout@v3
@@ -87,7 +86,6 @@ jobs:
           fi
           echo "Version is $release_version"
           echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
-          echo "container_image=ghcr.io/andreroggeri/messaging:$release_version" >> "$GITHUB_OUTPUT"
 
   create-schedule-release:
     runs-on: ubuntu-latest
@@ -96,7 +94,6 @@ jobs:
       group: create-release
     if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
     outputs:
-      container_image: ${{ steps.version.outputs.container_image }}
       release_version: ${{ steps.version.outputs.release_version }}
     steps:
       - uses: actions/checkout@v3
@@ -124,14 +121,19 @@ jobs:
           fi
           echo "Version is $release_version"
           echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
-          echo "container_image=ghcr.io/andreroggeri/schedule:$release_version" >> "$GITHUB_OUTPUT"
 
-  build-and-tag-schedule:
+  build-schedule-image:
     needs: create-schedule-release
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    outputs:
+      container_image: ${{ steps.image-version.outputs.image_version }}
     steps:
       - uses: actions/checkout@v3
+
+      - id: image-version
+        run: |
+          echo "container_image=ghcr.io/andreroggeri/schedule:${{ needs.create-schedule-release.outputs.release_version }} >> $GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -150,7 +152,7 @@ jobs:
         id: check-image-exists
         run: |
           echo "Checking if image already exists"
-          if docker pull ${{needs.create-schedule-release.outputs.container_image}}; then
+          if docker pull ${{steps.image-version.outputs.container_image}}; then
             echo "check-image-exists=true" >> $GITHUB_OUTPUT
           else
             echo "check-image-exists=false" >> $GITHUB_OUTPUT
@@ -160,7 +162,7 @@ jobs:
         run: |
           echo "check-image-exists: ${{ steps.check-image-exists.outputs.check-image-exists }}"
           echo "release_version: ${{ needs.create-schedule-release.outputs.release_version }}"
-          echo "container_image: ${{ needs.create-schedule-release.outputs.container_image }}"
+          echo "container_image: ${{ steps.image-version.outputs.container_image }}"
 
       - name: Docker build
         if: steps.check-image-exists.outputs.check-image-exists == 'false'
@@ -168,17 +170,23 @@ jobs:
         with:
           context: ./backend
           platforms: linux/amd64,linux/arm64
-          tags: ${{ needs.create-schedule-release.outputs.release_version }},ghcr.io/andreroggeri/schedule:latest
+          tags: ${{ steps.image-version.outputs.container_image}},ghcr.io/andreroggeri/schedule:latest
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  build-and-tag-messaging:
+  build-messaging-image:
     needs: create-messaging-release
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    outputs:
+      container_image: ${{ steps.image-version.outputs.image_version }}
     steps:
       - uses: actions/checkout@v3
+
+      - id: image-version
+        run: |
+          echo "container_image=ghcr.io/andreroggeri/messaging:${{ needs.create-messaging-release.outputs.release_version }} >> $GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -197,7 +205,7 @@ jobs:
         id: check-image-exists
         run: |
           echo "Checking if image already exists"
-          if docker pull ${{needs.create-messaging-release.outputs.container_image}}; then
+          if docker pull ${{ steps.image-version.outputs.container_image }}; then
             echo "check-image-exists=true" >> $GITHUB_OUTPUT
           else
             echo "check-image-exists=false" >> $GITHUB_OUTPUT
@@ -209,13 +217,13 @@ jobs:
         with:
           context: ./chatbot
           platforms: linux/amd64,linux/arm64
-          tags: ${{ needs.create-messaging-release.outputs.container_image }},ghcr.io/andreroggeri/messaging:latest
+          tags: ${{ steps.image-version.outputs.container_image }},ghcr.io/andreroggeri/messaging:latest
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   release-schedule:
-    needs: build-and-tag-schedule
+    needs: build-schedule-image
     timeout-minutes: 10
     runs-on: ubuntu-latest
     environment: staging
@@ -261,9 +269,9 @@ jobs:
             }
       - name: Update deployment version
         run: |
-          echo "Image version is ${{ needs.build-and-tag-backend.outputs.image_version }}"
-          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image_version }}"' backend/deployment/app/deployment.yml
-          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-backend.outputs.image_version }}"' backend/deployment/worker/deployment.yml
+          echo "Image version is ${{ needs.build-schedule-image.outputs.container_image }}"
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-schedule-image.outputs.container_image }}"' backend/deployment/app/deployment.yml
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-schedule-image.outputs.container_image }}"' backend/deployment/worker/deployment.yml
 
       - name: Update ingress
         run: |
@@ -279,11 +287,11 @@ jobs:
       - name: Migrate database
         run: |
           kubectl port-forward service/schedule-postgres 5432:5432 &
-          docker run --rm --network host -e DJANGO_SECRET_KEY=${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }} -e DJANGO_SETTINGS_MODULE=app.settings.staging -e DATABASE_URL=postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@localhost:5432/schedule ${{ needs.build-and-tag-backend.outputs.image_version }} python manage.py migrate --no-input
+          docker run --rm --network host -e DJANGO_SECRET_KEY=${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }} -e DJANGO_SETTINGS_MODULE=app.settings.staging -e DATABASE_URL=postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@localhost:5432/schedule ${{ needs.build-schedule-image.outputs.container_image }} python manage.py migrate --no-input
 
   release-messaging:
     environment: staging
-    needs: build-and-tag-messaging
+    needs: build-messaging-image
     timeout-minutes: 10
     runs-on: ubuntu-latest
     concurrency:
@@ -329,8 +337,8 @@ jobs:
             }
       - name: Update deployment version
         run: |
-          echo "Image version is ${{ needs.build-and-tag-messaging.outputs.image_version }}"
-          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-and-tag-messaging.outputs.image_version }}"' chatbot/deployment/app/deployment.yml
+          echo "Image version is ${{ needs.build-messaging-image.outputs.container_image }}"
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-messaging-image.outputs.container_image }}"' chatbot/deployment/app/deployment.yml
 
       - name: Create resources
         run: kubectl apply -f chatbot/deployment --recursive
@@ -341,7 +349,7 @@ jobs:
       - name: Migrate database
         run: |
           kubectl port-forward service/messaging-postgres 5432:5432 &
-          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging ${{ needs.build-and-tag-messaging.outputs.image_version }} npm run db:migrate
+          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging ${{ needs.build-messaging-image.outputs.container_image }} npm run db:migrate
 
   release-webapp-staging:
     needs: check-changed-apps
