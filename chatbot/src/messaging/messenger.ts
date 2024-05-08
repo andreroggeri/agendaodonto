@@ -151,7 +151,8 @@ export class Messenger {
   }
 
   private async initStoreHandler(): Promise<void> {
-    this.store = makeInMemoryStore({});
+    // @ts-expect-error
+    this.store = makeInMemoryStore({ logger: undefined });
     if (this.storeHandlerInterval) {
       clearInterval(this.storeHandlerInterval);
     }
