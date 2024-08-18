@@ -149,6 +149,29 @@ void (async () => {
 
   app.use('/v1/', buildApiRouter(messenger));
 
+  app.use('/events', async (req, res) => {
+    logger.info('Received events', { body: req.body });
+
+    const messageType = req.body.message?.type;
+
+    switch (messageType) {
+      case 'end-of-call-report':
+        const number = req.body.message?.call?.customer?.number;
+        logger.info('Received end-of-call-report', { number });
+        if (number) {
+          const numberWithoutPlusSign = number.replace('+', '');
+          const jid = `${numberWithoutPlusSign}@s.whatsapp.net`;
+          if (await messenger.phoneHasAccount(jid)) {
+            messenger.sendMessage(jid, 'Olá, aqui é do consultório odontológico. Vi que você acabou de ligar. Qualquer dúvida estamos a disposição.');
+          }
+        }
+        return res.status(200).json({ status: 'ok' });
+        break;
+      default:
+        return res.status(200).json({ status: 'ok' });
+    }
+  });
+
   app.listen(settings.port, () => {
     logger.info(`Chatbot is running on :${settings.port}`);
   });
