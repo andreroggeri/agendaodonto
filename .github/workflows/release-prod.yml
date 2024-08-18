@@ -109,7 +109,7 @@ jobs:
       - name: Deploy
         uses: dokku/github-action@master
         with:
-          branch: "main"
+          branch: "release"
           git_remote_url: ssh://dokku@${{secrets.PRODUCTION_VPN_IP}}/messaging
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
           git_push_flags: "--force"
