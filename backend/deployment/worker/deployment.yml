@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schedule-worker
+  labels:
+    app: schedule
+    env: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: schedule-worker
+  template:
+    metadata:
+      labels:
+        app: schedule-worker
+    spec:
+      containers:
+        - name: schedule-worker
+          image: ghcr.io/andreroggeri/schedule:latest # Replaced in CI/CD pipeline
+          command: ["celery", "-A", "app.schedule", "worker", "--loglevel=info"]
+          env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: schedule-secrets
+                  key: schedule-api-key
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: schedule-secrets
+                  key: schedule-db-url
+            - name: MESSAGING_URL
+              value: "http://messaging.default.svc.cluster.local:3000"
+            - name: MESSAGING_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: schedule-secrets
+                  key: messaging-api-key
+            - name: RABBITMQ_URL
+              valueFrom:
+                secretKeyRef:
+                  name: schedule-secrets
+                  key: schedule-rabbitmq-url
+            - name: MESSAGE_CLASS
+              value: "app.schedule.service.notification.whatsapp.Whatsapp"
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: schedule-secrets
+                  key: schedule-django-secret-key
+            - name: DJANGO_SETTINGS_MODULE
+              value: app.settings.staging # TODO: Use a single config file
+

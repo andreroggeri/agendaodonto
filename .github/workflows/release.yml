@@ -3,13 +3,16 @@ on:
   push:
     branches:
       - main
+      - k8s-deployment
     paths:
       - "backend/**"
       - "chatbot/**"
       - "webapp/**"
       - ".github/workflows/release.yml"
+
 concurrency:
   group: release-staging
+
 jobs:
   check-changed-apps:
     runs-on: ubuntu-latest
@@ -49,49 +52,182 @@ jobs:
             webapp/**
             .github/**
 
-  release-backend-staging:
-    needs: check-changed-apps
-    timeout-minutes: 10
+  create-messaging-release:
     runs-on: ubuntu-latest
-    concurrency:
-      group: wireguard
-    if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Setup wireguard
-        uses: egor-tensin/setup-wireguard@v1
-        with:
-          endpoint: ${{ secrets.WG_ENDPOINT }}
-          endpoint_public_key: ${{ secrets.WG_ENDPOINT_PUBLIC_KEY }}
-          private_key: ${{ secrets.WG_PRIVATE_KEY }}
-          ips: ${{ secrets.WG_IPS }}
-          allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
-
-      - name: Check VPN connection
-        run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
-
-      - name: Deploy
-        uses: dokku/github-action@master
-        with:
-          branch: "main"
-          git_remote_url: ssh://dokku@${{secrets.STAGING_VPN_IP}}/backend
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
-          git_push_flags: "--force"
-
-  release-chatbot-staging:
     needs: check-changed-apps
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
     if: needs.check-changed-apps.outputs.changed-files-chatbot == 'true'
     concurrency:
-      group: wireguard
+      group: create-release
+    outputs:
+      release_version: ${{ steps.version.outputs.release_version }}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Generate a new version
+        id: semver
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          working_directory: "./chatbot"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save version
+        id: version
+        run: |
+          # If the new release is published, strip the module name from the version (steps.semver.outputs.new_release_published)
+          # Otherwise use the latest one available through git tags
+          if [ "${{ steps.semver.outputs.new_release_published }}" == "true" ]; then
+            echo "New release version is ${{ steps.semver.outputs.new_release_version }}"
+            release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/messaging-//')
+          else
+            release_version=$(git tag -l 'chatbot-*' | sort -V | tail -n 1 | sed 's/chatbot-//')
+          fi
+          echo "Version is $release_version"
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+
+  create-schedule-release:
+    runs-on: ubuntu-latest
+    needs: check-changed-apps
+    concurrency:
+      group: create-release
+    if: needs.check-changed-apps.outputs.changed-files-backend == 'true'
+    outputs:
+      release_version: ${{ steps.version.outputs.release_version }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Generate a new version
+        id: semver
+        uses: cycjimmy/semantic-release-action@v4
+        with:
+          working_directory: "./backend"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save version
+        id: version
+        run: |
+          # If the new release is published, strip the module name from the version (steps.semver.outputs.new_release_published)
+          # Otherwise use the latest one available through git tags
+          if [ "${{ steps.semver.outputs.new_release_published }}" == "true" ]; then
+            echo "New release version is ${{ steps.semver.outputs.new_release_version }}"
+            release_version=$(echo "${{ steps.semver.outputs.new_release_version }}" | sed 's/schedule-//')
+          else
+            release_version=$(git tag -l 'schedule-*' | sort -V | tail -n 1 | sed 's/schedule-//')
+          fi
+          echo "Version is $release_version"
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+
+  build-schedule-image:
+    needs: create-schedule-release
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    outputs:
+      container_image: ${{ steps.image-version.outputs.container_image }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Save container image version
+        id: image-version
+        run: |
+          echo "container_image=ghcr.io/andreroggeri/schedule:${{ needs.create-schedule-release.outputs.release_version }}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Check if docker image already exists
+        id: check-image-exists
+        run: |
+          echo "Checking if image already exists"
+          if docker pull ${{steps.image-version.outputs.container_image}}; then
+            echo "check-image-exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "check-image-exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Docker build
+        if: steps.check-image-exists.outputs.check-image-exists == 'false'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.image-version.outputs.container_image }},ghcr.io/andreroggeri/schedule:latest
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-messaging-image:
+    needs: create-messaging-release
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    outputs:
+      container_image: ${{ steps.image-version.outputs.container_image }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: image-version
+        run: |
+          echo "container_image=ghcr.io/andreroggeri/messaging:${{ needs.create-messaging-release.outputs.release_version }}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Check if docker image already exists
+        id: check-image-exists
+        run: |
+          echo "Checking if image already exists"
+          if docker pull ${{ steps.image-version.outputs.container_image }}; then
+            echo "check-image-exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "check-image-exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Docker build
+        if: steps.check-image-exists.outputs.check-image-exists == 'false'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./chatbot
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.image-version.outputs.container_image }},ghcr.io/andreroggeri/messaging:latest
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  release-schedule:
+    needs: build-schedule-image
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency:
+      group: wireguard
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: frenck/action-setup-yq@v1
 
       - name: Setup wireguard
         uses: egor-tensin/setup-wireguard@v1
@@ -105,13 +241,110 @@ jobs:
       - name: Check VPN connection
         run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
 
-      - name: Deploy
-        uses: dokku/github-action@master
+      - name: Set context
+        uses: azure/k8s-set-context@v4
         with:
-          branch: "backend-in-docker"
-          git_remote_url: ssh://dokku@${{secrets.STAGING_VPN_IP}}/messaging
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY_STAGING }}
-          git_push_flags: "--force"
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Create secrets
+        uses: Azure/k8s-create-secret@v5
+        with:
+          namespace: default
+          secret-type: generic
+          secret-name: schedule-secrets
+          string-data: |
+            {
+              "schedule-api-key": "${{ secrets.SCHEDULE_API_KEY }}",
+              "schedule-db-password": "${{ secrets.SCHEDULE_DB_PASSWORD }}",
+              "schedule-db-url": "postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@schedule-postgres:5432/schedule",
+              "schedule-django-secret-key": "${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }}",
+              "schedule-rabbitmq-password": "${{ secrets.SCHEDULE_RABBITMQ_PASSWORD }}",
+              "schedule-rabbitmq-url": "amqp://schedule:${{ secrets.SCHEDULE_RABBITMQ_PASSWORD }}@schedule-rabbitmq:5672",
+              "messaging-api-key": "${{ secrets.MESSAGING_API_KEY }}"
+            }
+      - name: Update deployment version
+        run: |
+          echo "Image version is ${{ needs.build-schedule-image.outputs.container_image }}"
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-schedule-image.outputs.container_image }}"' backend/deployment/app/deployment.yml
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-schedule-image.outputs.container_image }}"' backend/deployment/worker/deployment.yml
+
+      - name: Update ingress
+        run: |
+          yq e -i '.spec.rules[0].host = "schedule.staging.agendaodonto.com"' backend/deployment/app/ingress.yml
+          yq e -i '.spec.tls[0].hosts[0] = "schedule.staging.agendaodonto.com"' backend/deployment/app/ingress.yml
+
+      - name: Create resources
+        run: kubectl apply -f backend/deployment --recursive
+
+      - name: Wait for deployments
+        run: kubectl wait --for=condition=available --timeout=600s deployment/schedule-app deployment/schedule-worker deployment/schedule-postgres deployment/schedule-rabbitmq
+
+      - name: Migrate database
+        run: |
+          kubectl port-forward service/schedule-postgres 5432:5432 &
+          docker run --rm --network host -e DJANGO_SECRET_KEY=${{ secrets.SCHEDULE_DJANGO_SECRET_KEY }} -e DJANGO_SETTINGS_MODULE=app.settings.staging -e DATABASE_URL=postgres://postgres:${{ secrets.SCHEDULE_DB_PASSWORD }}@localhost:5432/schedule ${{ needs.build-schedule-image.outputs.container_image }} python manage.py migrate --no-input
+
+  release-messaging:
+    environment: staging
+    needs: build-messaging-image
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    concurrency:
+      group: wireguard
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: frenck/action-setup-yq@v1
+
+      - name: Setup wireguard
+        uses: egor-tensin/setup-wireguard@v1
+        with:
+          endpoint: ${{ secrets.WG_ENDPOINT }}
+          endpoint_public_key: ${{ secrets.WG_ENDPOINT_PUBLIC_KEY }}
+          private_key: ${{ secrets.WG_PRIVATE_KEY }}
+          ips: ${{ secrets.WG_IPS }}
+          allowed_ips: ${{ secrets.WG_ALLOWED_IPS }}
+
+      - name: Check VPN connection
+        run: ping -c1 ${{ secrets.VPN_SERVER_INTERNAL_IP }}
+
+      - name: Set context
+        uses: azure/k8s-set-context@v4
+        with:
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Create secrets
+        uses: Azure/k8s-create-secret@v5
+        with:
+          namespace: default
+          secret-type: generic
+          secret-name: messaging-secrets
+          string-data: |
+            {
+              "messaging-api-key": "${{ secrets.MESSAGING_API_KEY }}",
+              "messaging-redis-password": "${{ secrets.MESSAGING_REDIS_PASSWORD }}",
+              "messaging-db-password": "${{ secrets.MESSAGING_DB_PASSWORD }}",
+              "messaging-db-url": "postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@messaging-postgres:5432/messaging",
+              "messaging-redis-url": "redis://:${{ secrets.MESSAGING_REDIS_PASSWORD }}@messaging-redis:6379",
+              "messaging-clinic-id": "${{ secrets.MESSAGING_CLINIC_ID }}",
+              "schedule-api-key": "${{ secrets.SCHEDULE_API_KEY }}",
+              "messaging-google-recog-api-key": "${{ secrets.MESSAGING_GOOGLE_RECOG_API_KEY }}"
+            }
+      - name: Update deployment version
+        run: |
+          echo "Image version is ${{ needs.build-messaging-image.outputs.container_image }}"
+          yq e -i '.spec.template.spec.containers[0].image = "${{ needs.build-messaging-image.outputs.container_image }}"' chatbot/deployment/app/deployment.yml
+
+      - name: Create resources
+        run: kubectl apply -f chatbot/deployment --recursive
+
+      - name: Wait for deployments
+        run: kubectl wait --for=condition=available --timeout=600s deployment/messaging-postgres deployment/messaging-redis deployment/messaging-app
+
+      - name: Migrate database
+        run: |
+          kubectl port-forward service/messaging-postgres 5432:5432 &
+          docker run --rm --network host -e DATABASE_URL=postgres://postgres:${{ secrets.MESSAGING_DB_PASSWORD }}@localhost:5432/messaging ${{ needs.build-messaging-image.outputs.container_image }} npm run db:migrate
 
   release-webapp-staging:
     needs: check-changed-apps
@@ -146,8 +379,7 @@ jobs:
 
   e2e-tests-staging:
     runs-on: ubuntu-latest
-    needs:
-      [release-backend-staging, release-chatbot-staging, release-webapp-staging]
+    needs: [release-schedule, release-messaging, release-webapp-staging]
     defaults:
       run:
         working-directory: webapp

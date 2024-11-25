@@ -5,15 +5,14 @@ import makeWASocket, {
   downloadMediaMessage,
   fetchLatestBaileysVersion,
   makeInMemoryStore,
-  proto,
-  useMultiFileAuthState,
+  proto
 } from '@whiskeysockets/baileys';
 import { Redis } from 'ioredis';
+import database from '../database';
 import logger from '../logging';
 import { extractPhoneFromJid } from '../phone';
-import { settings } from '../settings';
+import { useRedisAuth } from './auth-state';
 import { MessengerCache } from './cache';
-import database from '../database';
 import Long = require('long');
 
 const STORE_KEY = 'whatsapp_store';
@@ -68,13 +67,10 @@ export class Messenger {
             logger.error('Failed to save message', { message, e });
           }
         }
-        if (
-          message.key.remoteJid !== 'status@broadcast' &&
-          !message.key.fromMe &&
-          message.message?.extendedTextMessage?.text
-        ) {
-          if (message.key.remoteJid) {
-            callback({ from: message.key.remoteJid, content: message.message?.extendedTextMessage.text });
+        if (message.key.remoteJid !== 'status@broadcast' && !message.key.fromMe && message.key.remoteJid) {
+          const content = message.message?.extendedTextMessage?.text ?? message.message?.conversation ?? '';
+          if (content) {
+            callback({ from: message.key.remoteJid, content });
           }
         }
       });
@@ -96,7 +92,7 @@ export class Messenger {
   }
 
   async init(): Promise<void> {
-    const { state, saveCreds } = await useMultiFileAuthState(settings.authenticationPath);
+    const { state, saveCreds } = await useRedisAuth(this.redis);
     const baileysData = await fetchLatestBaileysVersion();
     logger.info(`Baileys version: ${baileysData.version.toString()}`, baileysData);
     this.socket = makeWASocket({

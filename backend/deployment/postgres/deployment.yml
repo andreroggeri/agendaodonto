@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schedule-postgres
+  labels:
+    app: schedule
+    env: staging
+spec:
+  selector:
+    matchLabels:
+      app: schedule-postgres
+  template:
+    metadata:
+      labels:
+        app: schedule-postgres
+    spec:
+      containers:
+        - name: schedule-postgres
+          image: "postgres:16"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: schedule
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: schedule-secrets
+                  key: schedule-db-password
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: schedule-postgresdata
+      volumes:
+        - name: schedule-postgresdata
+          persistentVolumeClaim:
+            claimName: schedule-postgres-volume-claim
