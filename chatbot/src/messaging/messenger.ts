@@ -1,19 +1,19 @@
 import { Boom } from '@hapi/boom';
+import { makeInMemoryStore } from '@rodrigogs/baileys-store';
 import makeWASocket, {
   DisconnectReason,
   WAMessage,
   downloadMediaMessage,
   fetchLatestBaileysVersion,
-  makeInMemoryStore,
   proto,
   useMultiFileAuthState,
 } from '@whiskeysockets/baileys';
 import { Redis } from 'ioredis';
+import database from '../database';
 import logger from '../logging';
 import { extractPhoneFromJid } from '../phone';
 import { settings } from '../settings';
 import { MessengerCache } from './cache';
-import database from '../database';
 import Long = require('long');
 
 const STORE_KEY = 'whatsapp_store';
@@ -143,15 +143,14 @@ export class Messenger {
 
   async phoneHasAccount(jid: string): Promise<boolean> {
     const status = await this.socket.onWhatsApp(jid);
-    if (status.length === 0) {
+    if (status?.length === 0) {
       return false;
     }
 
-    return status[0].exists;
+    return (status?.[0]?.exists as boolean) ?? false;
   }
 
   private async initStoreHandler(): Promise<void> {
-    // @ts-expect-error
     this.store = makeInMemoryStore({ logger: undefined });
     if (this.storeHandlerInterval) {
       clearInterval(this.storeHandlerInterval);
